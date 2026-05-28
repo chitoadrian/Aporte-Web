@@ -109,7 +109,507 @@ const languageToggle = document.getElementById('languageToggle');
 const selectedLanguage = document.getElementById('selectedLanguage');
 const languageOptions = document.getElementById('languageOptions');
 const languageOptionButtons = document.querySelectorAll('.language-option');
+
+let currentLanguage = 'es';
 let loaderTimeoutId = null;
+
+const TRANSLATIONS = {
+    es: {
+        languageName: 'Español',
+        pageTitle: 'AC Manager - Gestor Profesional de Presupuestos',
+        metaDescription: 'Gestor de presupuestos para talleres técnicos: cotiza, guarda y consulta servicios con una interfaz profesional.',
+        navFeatures: 'Funciones',
+        navSolutions: 'Soluciones',
+        navBenefits: 'Beneficios',
+        heroBadge: 'Solución Técnica Profesional',
+        heroTitle: 'Gestiona cotizaciones con precisión y diseño corporativo',
+        heroDescription: 'AC Manager es una herramienta pensada para talleres técnicos que necesitan cotizar servicios, controlar costos de repuestos y mantener un historial ordenado y fácil de consultar.',
+        whyTitle: '¿Por qué elegir AC Manager?',
+        costPrecisionTitle: 'Precisión de Costos',
+        costPrecisionDesc: 'Suma automáticamente los repuestos y mano de obra para evitar errores manuales de cálculo.',
+        taxCalcTitle: 'Cálculo de Impuestos',
+        taxCalcDesc: 'Aplica instantáneamente la tasa del IVA del 15% sobre el subtotal de los servicios.',
+        internalDatabaseTitle: 'Base de Datos Interna',
+        internalDatabaseDesc: 'Guarda y persiste los registros del historial mediante el uso inteligente de localStorage.',
+        usageGuideTitle: 'Guía de Uso Rápido',
+        guideStep1Title: 'Accede de forma segura',
+        guideStep1Desc: 'Inicia sesión para ingresar al panel exclusivo de técnicos y trabajar con datos protegidos.',
+        guideStep2Title: 'Ingresa los Datos',
+        guideStep2Desc: 'Escribe el nombre del cliente, dispositivo y costos del servicio técnico.',
+        guideStep3Title: 'Guarda e Historial',
+        guideStep3Desc: 'Visualiza el desglose en tiempo real y guarda la cotización en el historial persistente.',
+        featuresLabel: 'Funciones',
+        featuresHeader: 'Automatiza cada paso de tu flujo de trabajo',
+        feature1Title: 'Registro instantáneo',
+        feature1Desc: 'Guarda presupuestos y consulta el historial con un solo clic.',
+        feature2Title: 'Desglose claro',
+        feature2Desc: 'Visualiza subtotal, IVA y total de forma ordenada.',
+        feature3Title: 'Reportes rápidos',
+        feature3Desc: 'Genera cotizaciones con formato profesional para tus clientes.',
+        feature4Title: 'Control de acceso',
+        feature4Desc: 'La sesión y el historial quedan vinculados al técnico que ingresa.',
+        solutionsLabel: 'Soluciones',
+        solutionsHeader: 'Resuelve problemas reales de tu taller',
+        solutionsDescription: 'AC Manager centraliza tus presupuestos, evita cálculos manuales y reduce tiempos de respuesta al cliente.',
+        solutionItem1: 'Control de inventario básico y costos de repuestos.',
+        solutionItem2: 'Historial accesible para cada presupuesto guardado.',
+        solutionItem3: 'Interfaz clara para técnicos y gerentes.',
+        benefitsLabel: 'Beneficios',
+        benefitsHeader: 'Qué ganas al usar AC Manager',
+        benefit1Title: 'Más eficiencia',
+        benefit1Desc: 'Reduce el tiempo en formular una cotización y atiende más clientes por día.',
+        benefit2Title: 'Menos errores',
+        benefit2Desc: 'Los cálculos automáticos evitan fallos en impuestos y totales.',
+        benefit3Title: 'Mayor confianza',
+        benefit3Desc: 'Presenta presupuestos profesionales que generan seguridad en tus clientes.',
+        benefit4Title: 'Historial organizado',
+        benefit4Desc: 'Mantén todos tus trabajos guardados y listos para consulta futura.',
+        btnEnterAppText: 'Comenzar ahora',
+        authTabLogin: 'Iniciar Sesión',
+        authTabRegister: 'Crear Cuenta',
+        authTitleLogin: 'Bienvenido de Nuevo',
+        authSubtitleLogin: 'Ingresa tus credenciales para acceder a la calculadora.',
+        authTitleRegister: 'Crea tu Cuenta',
+        authSubtitleRegister: 'Regístrate como técnico autorizado de SoporteTec.',
+        authEmailLabel: 'Correo Electrónico',
+        authEmailPlaceholder: 'correo@ejemplo.com',
+        authEmailError: 'Escribe un correo electrónico válido',
+        authPasswordLabel: 'Contraseña',
+        authPasswordPlaceholder: '••••••••',
+        authPasswordError: 'La contraseña debe tener al menos 6 caracteres',
+        authConfirmPasswordLabel: 'Confirmar Contraseña',
+        authConfirmPasswordPlaceholder: '••••••••',
+        authConfirmPasswordError: 'Las contraseñas no coinciden',
+        btnForgotPassword: '¿Olvidaste tu contraseña?',
+        btnAuthSubmitLogin: 'Iniciar Sesión',
+        btnAuthSubmitRegister: 'Crear Cuenta',
+        btnBackToLandingText: 'Volver al Inicio',
+        btnBackToLandingTitle: 'Volver al Inicio',
+        btnLogoutText: 'Cerrar Sesión',
+        btnLogoutTitle: 'Cerrar Sesión',
+        landingTagline: 'Herramientas Profesionales de Gestión',
+        calculatorTagline: 'Calculadora de Presupuestos y Servicios Técnicos',
+        quoteFormTitle: 'Nueva Cotización',
+        clientNameLabel: 'Nombre del Cliente',
+        clientNamePlaceholder: 'Ej. Juan Pérez',
+        clientNameError: 'Este campo es obligatorio',
+        deviceModelLabel: 'Dispositivo / Equipo',
+        deviceModelPlaceholder: 'Buscar o seleccionar dispositivo...',
+        deviceInputNote: 'Escribe para filtrar laptops, computadoras, componentes y marcas como Asus, HP, Dell, Lenovo, MSI.',
+        deviceModelError: 'Este campo es obligatorio',
+        partsCostLabel: 'Costo Repuestos ($)',
+        partsCostPlaceholder: '0.00',
+        partsCostError: 'Mínimo 0',
+        laborCostLabel: 'Mano de Obra ($)',
+        laborCostPlaceholder: '0.00',
+        laborCostError: 'Mínimo 0',
+        btnCalculateText: 'Calcular y Guardar',
+        dbStatusLabel: 'Local DB',
+        livePreviewBadge: 'Vista Previa En Vivo',
+        breakdownTitle: 'Desglose del Presupuesto',
+        subtotalLabel: 'Subtotal (Repuestos + Mano de Obra)',
+        ivaLabel: 'IVA (15%)',
+        totalLabel: 'Total General',
+        chartTitle: 'Gráfico de costos',
+        partsLabel: 'Repuestos',
+        laborLabel: 'Mano de obra',
+        ivaChartLabel: 'IVA',
+        historyTitle: 'Historial de Cotizaciones',
+        searchHistoryPlaceholder: 'Buscar por cliente o equipo...',
+        historyEmptyText: 'No hay presupuestos registrados en el historial.',
+        btnClearHistoryText: 'Limpiar Todo el Historial',
+        footerLine1: '© 2026 AC Manager. Gestión profesional de presupuestos para servicios técnicos.',
+        footerLine2: 'Demostración funcional | Taller y proyecto técnico',
+        modalTitle: '¿Estás seguro de continuar?',
+        modalDescription: 'Esta acción eliminará de forma permanente todas las cotizaciones guardadas en el historial. Esta operación no se puede deshacer.',
+        modalBtnCancel: 'Cancelar',
+        modalBtnConfirm: 'Sí, borrar todo',
+        authFormInvalid: 'Por favor, corrige los errores en el formulario de acceso.',
+        firebaseLoginSuccess: 'Sesión iniciada con Firebase: {email}',
+        firebaseAccountCreated: 'Cuenta de Firebase creada: {email}',
+        simulatorEmailNotRegistered: 'El correo electrónico no está registrado en el simulador.',
+        simulatorWrongPassword: 'Contraseña incorrecta.',
+        simulatorLoginSuccess: 'Se inició correctamente.',
+        simulatorEmailAlreadyRegistered: 'Este correo electrónico ya está registrado.',
+        simulatorAccountCreated: 'Cuenta creada correctamente. Por favor, inicie sesión.',
+        passwordResetInvalidEmail: 'Por favor, ingresa un correo electrónico válido en el campo superior.',
+        passwordResetSentFirebase: 'Se ha enviado un correo real de restablecimiento de contraseña a: {email}. Revisa tu bandeja de entrada.',
+        passwordResetSentSimulator: '[SIMULACIÓN] Correo enviado con éxito a: {email}. En un entorno real con Firebase, el método \"sendPasswordResetEmail\" enviaría un enlace de recuperación.',
+        firebaseSessionClosed: 'Sesión de Firebase cerrada.',
+        localSessionClosed: 'Sesión local finalizada.',
+        quoteSaved: 'Presupuesto para {clientName} guardado.',
+        quoteDeleted: 'Presupuesto de {clientName} eliminado.',
+        historyCleared: 'El historial del técnico ha sido vaciado.',
+        historyNoResults: 'No se encontraron resultados para "{query}".',
+        firebaseErrorInvalidEmail: 'Formato de correo electrónico inválido.',
+        firebaseErrorUserDisabled: 'Esta cuenta ha sido inhabilitada.',
+        firebaseErrorUserNotFound: 'No existe ningún usuario registrado con este correo.',
+        firebaseErrorWrongPassword: 'Contraseña incorrecta.',
+        firebaseErrorEmailAlreadyInUse: 'Este correo ya está asociado a otra cuenta.',
+        firebaseErrorWeakPassword: 'La contraseña debe tener mínimo 6 caracteres.',
+        firebaseErrorDefault: 'Ocurrió un error en el servidor de autenticación.',
+        formIncompleteBudget: 'Por favor, completa los campos del presupuesto.',
+        recordsBadge: '{count} cotizaciones',
+        deleteRowTitle: 'Eliminar este presupuesto',
+        deviceNoResults: 'No se encontraron dispositivos',
+        deviceSelectTitle: 'Seleccionar {device}',
+        fullIdTitle: 'ID completo: {id}',
+        dbStatusFirebase: 'Firebase Cloud',
+        dbStatusLocal: 'BD Local',
+        languageChanged: 'Idioma cambiado a {lang}.',
+    },
+    en: {
+        languageName: 'English',
+        pageTitle: 'AC Manager - Professional Quotation Manager',
+        metaDescription: 'Quotation manager for technical workshops: quote, save and review service budgets with a professional interface.',
+        navFeatures: 'Features',
+        navSolutions: 'Solutions',
+        navBenefits: 'Benefits',
+        heroBadge: 'Professional Technical Solution',
+        heroTitle: 'Manage quotes with accuracy and corporate design',
+        heroDescription: 'AC Manager is a tool designed for technical workshops that need to quote services, control parts costs, and keep an organized history that is easy to consult.',
+        whyTitle: 'Why choose AC Manager?',
+        costPrecisionTitle: 'Cost Accuracy',
+        costPrecisionDesc: 'Automatically adds parts and labor to prevent manual calculation errors.',
+        taxCalcTitle: 'Tax Calculation',
+        taxCalcDesc: 'Instantly applies the 15% VAT rate on the service subtotal.',
+        internalDatabaseTitle: 'Internal Database',
+        internalDatabaseDesc: 'Saves and persists history records using localStorage intelligently.',
+        usageGuideTitle: 'Quick Start Guide',
+        guideStep1Title: 'Sign in securely',
+        guideStep1Desc: 'Log in to access the technician-only panel and work with protected data.',
+        guideStep2Title: 'Enter the Data',
+        guideStep2Desc: 'Type the client name, device and service costs.',
+        guideStep3Title: 'Save and History',
+        guideStep3Desc: 'See the breakdown in real time and save the quote to persistent history.',
+        featuresLabel: 'Features',
+        featuresHeader: 'Automate every step of your workflow',
+        feature1Title: 'Instant record',
+        feature1Desc: 'Save quotes and check history with a single click.',
+        feature2Title: 'Clear breakdown',
+        feature2Desc: 'View subtotal, VAT and total in an organized way.',
+        feature3Title: 'Fast reports',
+        feature3Desc: 'Generate professional-looking quotes for your clients.',
+        feature4Title: 'Access control',
+        feature4Desc: 'Session and history are linked to the technician who logs in.',
+        solutionsLabel: 'Solutions',
+        solutionsHeader: 'Solve real problems in your workshop',
+        solutionsDescription: 'AC Manager centralizes your quotes, avoids manual calculations and reduces customer response times.',
+        solutionItem1: 'Basic inventory control and parts cost tracking.',
+        solutionItem2: 'Accessible history for every saved quote.',
+        solutionItem3: 'Clear interface for technicians and managers.',
+        benefitsLabel: 'Benefits',
+        benefitsHeader: 'What you gain by using AC Manager',
+        benefit1Title: 'More efficiency',
+        benefit1Desc: 'Reduce the time needed to create a quote and serve more customers per day.',
+        benefit2Title: 'Fewer errors',
+        benefit2Desc: 'Automatic calculations prevent mistakes in taxes and totals.',
+        benefit3Title: 'More confidence',
+        benefit3Desc: 'Present professional quotes that build customer trust.',
+        benefit4Title: 'Organized history',
+        benefit4Desc: 'Keep all your jobs saved and ready for future review.',
+        btnEnterAppText: 'Start now',
+        authTabLogin: 'Log In',
+        authTabRegister: 'Sign Up',
+        authTitleLogin: 'Welcome Back',
+        authSubtitleLogin: 'Enter your credentials to access the calculator.',
+        authTitleRegister: 'Create Your Account',
+        authSubtitleRegister: 'Register as an authorized SuporteTec technician.',
+        authEmailLabel: 'Email Address',
+        authEmailPlaceholder: 'email@example.com',
+        authEmailError: 'Enter a valid email address',
+        authPasswordLabel: 'Password',
+        authPasswordPlaceholder: '••••••••',
+        authPasswordError: 'Password must be at least 6 characters',
+        authConfirmPasswordLabel: 'Confirm Password',
+        authConfirmPasswordPlaceholder: '••••••••',
+        authConfirmPasswordError: 'Passwords do not match',
+        btnForgotPassword: 'Forgot your password?',
+        btnAuthSubmitLogin: 'Log In',
+        btnAuthSubmitRegister: 'Sign Up',
+        btnBackToLandingText: 'Back to Home',
+        btnBackToLandingTitle: 'Back to Home',
+        btnLogoutText: 'Log Out',
+        btnLogoutTitle: 'Log Out',
+        landingTagline: 'Professional Management Tools',
+        calculatorTagline: 'Budget and Service Calculator',
+        quoteFormTitle: 'New Quote',
+        clientNameLabel: 'Client Name',
+        clientNamePlaceholder: 'Ex. John Doe',
+        clientNameError: 'This field is required',
+        deviceModelLabel: 'Device / Equipment',
+        deviceModelPlaceholder: 'Search or select a device...',
+        deviceInputNote: 'Type to filter laptops, computers, components and brands like Asus, HP, Dell, Lenovo, MSI.',
+        deviceModelError: 'This field is required',
+        partsCostLabel: 'Parts Cost ($)',
+        partsCostPlaceholder: '0.00',
+        partsCostError: 'Minimum 0',
+        laborCostLabel: 'Labor Cost ($)',
+        laborCostPlaceholder: '0.00',
+        laborCostError: 'Minimum 0',
+        btnCalculateText: 'Calculate and Save',
+        dbStatusLabel: 'Local DB',
+        livePreviewBadge: 'Live Preview',
+        breakdownTitle: 'Budget Breakdown',
+        subtotalLabel: 'Subtotal (Parts + Labor)',
+        ivaLabel: 'VAT (15%)',
+        totalLabel: 'Total Amount',
+        chartTitle: 'Cost chart',
+        partsLabel: 'Parts',
+        laborLabel: 'Labor',
+        ivaChartLabel: 'VAT',
+        historyTitle: 'Quotes History',
+        searchHistoryPlaceholder: 'Search by client or device...',
+        historyEmptyText: 'No quotes recorded in history.',
+        btnClearHistoryText: 'Clear Full History',
+        footerLine1: '© 2026 AC Manager. Professional budget management for technical services.',
+        footerLine2: 'Working demo | Workshop and technical project',
+        modalTitle: 'Are you sure you want to continue?',
+        modalDescription: 'This action will permanently remove all saved quotes from history. This operation cannot be undone.',
+        modalBtnCancel: 'Cancel',
+        modalBtnConfirm: 'Yes, delete all',
+        authFormInvalid: 'Please fix the errors in the login form.',
+        firebaseLoginSuccess: 'Logged in with Firebase: {email}',
+        firebaseAccountCreated: 'Firebase account created: {email}',
+        simulatorEmailNotRegistered: 'The email address is not registered in the simulator.',
+        simulatorWrongPassword: 'Incorrect password.',
+        simulatorLoginSuccess: 'Logged in successfully.',
+        simulatorEmailAlreadyRegistered: 'This email address is already registered.',
+        simulatorAccountCreated: 'Account created successfully. Please log in.',
+        passwordResetInvalidEmail: 'Please enter a valid email address in the top field.',
+        passwordResetSentFirebase: 'A real password reset email has been sent to: {email}. Check your inbox.',
+        passwordResetSentSimulator: '[SIMULATION] Email successfully sent to: {email}. In a real Firebase setup, sendPasswordResetEmail would send a recovery link.',
+        firebaseSessionClosed: 'Firebase session closed.',
+        localSessionClosed: 'Local session ended.',
+        quoteSaved: 'Quote for {clientName} saved.',
+        quoteDeleted: 'Quote for {clientName} deleted.',
+        historyCleared: 'Technician history has been cleared.',
+        historyNoResults: 'No results found for "{query}".',
+        firebaseErrorInvalidEmail: 'Invalid email format.',
+        firebaseErrorUserDisabled: 'This account has been disabled.',
+        firebaseErrorUserNotFound: 'No registered user found with that email.',
+        firebaseErrorWrongPassword: 'Incorrect password.',
+        firebaseErrorEmailAlreadyInUse: 'This email is already associated with another account.',
+        firebaseErrorWeakPassword: 'Password must be at least 6 characters.',
+        firebaseErrorDefault: 'An authentication server error occurred.',
+        formIncompleteBudget: 'Please complete the quote fields.',
+        recordsBadge: '{count} quotes',
+        deleteRowTitle: 'Delete this quote',
+        deviceNoResults: 'No devices found',
+        deviceSelectTitle: 'Select {device}',
+        fullIdTitle: 'Full ID: {id}',
+        dbStatusFirebase: 'Firebase Cloud',
+        dbStatusLocal: 'Local DB',
+        languageChanged: 'Language changed to {lang}.',
+    },
+    pt: {
+        languageName: 'Português',
+        pageTitle: 'AC Manager - Gerenciador Profissional de Orçamentos',
+        metaDescription: 'Gerenciador de orçamentos para oficinas técnicas: orce, salve e consulte serviços com uma interface profissional.',
+        navFeatures: 'Funcionalidades',
+        navSolutions: 'Soluções',
+        navBenefits: 'Benefícios',
+        heroBadge: 'Solução Técnica Profissional',
+        heroTitle: 'Gerencie orçamentos com precisão e design corporativo',
+        heroDescription: 'O AC Manager é uma ferramenta para oficinas técnicas que precisam orçar serviços, controlar custos de peças e manter um histórico organizado e fácil de consultar.',
+        whyTitle: 'Por que escolher o AC Manager?',
+        costPrecisionTitle: 'Precisão de Custos',
+        costPrecisionDesc: 'Soma automaticamente peças e mão de obra para evitar erros manuais de cálculo.',
+        taxCalcTitle: 'Cálculo de Impostos',
+        taxCalcDesc: 'Aplica instantaneamente a taxa de IVA de 15% sobre o subtotal dos serviços.',
+        internalDatabaseTitle: 'Banco de Dados Interno',
+        internalDatabaseDesc: 'Salva e persiste os registros do histórico usando localStorage de forma inteligente.',
+        usageGuideTitle: 'Guia de Uso Rápido',
+        guideStep1Title: 'Acesse com segurança',
+        guideStep1Desc: 'Faça login para acessar o painel exclusivo para técnicos e trabalhar com dados protegidos.',
+        guideStep2Title: 'Insira os Dados',
+        guideStep2Desc: 'Digite o nome do cliente, dispositivo e custos do serviço técnico.',
+        guideStep3Title: 'Salve e Histórico',
+        guideStep3Desc: 'Veja o detalhamento em tempo real e salve o orçamento no histórico persistente.',
+        featuresLabel: 'Funcionalidades',
+        featuresHeader: 'Automatize cada etapa do seu fluxo de trabalho',
+        feature1Title: 'Registro instantâneo',
+        feature1Desc: 'Salve orçamentos e consulte o histórico com um único clique.',
+        feature2Title: 'Detalhamento claro',
+        feature2Desc: 'Visualize subtotal, IVA e total de forma organizada.',
+        feature3Title: 'Relatórios rápidos',
+        feature3Desc: 'Gere orçamentos com layout profissional para seus clientes.',
+        feature4Title: 'Controle de acesso',
+        feature4Desc: 'Sessão e histórico ficam vinculados ao técnico que entra.',
+        solutionsLabel: 'Soluções',
+        solutionsHeader: 'Resolva problemas reais da sua oficina',
+        solutionsDescription: 'O AC Manager centraliza seus orçamentos, evita cálculos manuais e reduz o tempo de resposta ao cliente.',
+        solutionItem1: 'Controle básico de estoque e custos de peças.',
+        solutionItem2: 'Histórico acessível para cada orçamento salvo.',
+        solutionItem3: 'Interface clara para técnicos e gerentes.',
+        benefitsLabel: 'Benefícios',
+        benefitsHeader: 'O que você ganha usando o AC Manager',
+        benefit1Title: 'Mais eficiência',
+        benefit1Desc: 'Reduza o tempo para elaborar um orçamento e atenda mais clientes por dia.',
+        benefit2Title: 'Menos erros',
+        benefit2Desc: 'Cálculos automáticos evitam falhas em impostos e totais.',
+        benefit3Title: 'Mais confiança',
+        benefit3Desc: 'Apresente orçamentos profissionais que inspiram confiança aos clientes.',
+        benefit4Title: 'Histórico organizado',
+        benefit4Desc: 'Mantenha todos os seus trabalhos salvos e prontos para consulta futura.',
+        btnEnterAppText: 'Começar agora',
+        authTabLogin: 'Entrar',
+        authTabRegister: 'Criar Conta',
+        authTitleLogin: 'Bem-vindo de volta',
+        authSubtitleLogin: 'Digite suas credenciais para acessar a calculadora.',
+        authTitleRegister: 'Crie sua conta',
+        authSubtitleRegister: 'Cadastre-se como técnico autorizado do SuporteTec.',
+        authEmailLabel: 'E-mail',
+        authEmailPlaceholder: 'email@exemplo.com',
+        authEmailError: 'Digite um e-mail válido',
+        authPasswordLabel: 'Senha',
+        authPasswordPlaceholder: '••••••••',
+        authPasswordError: 'A senha deve ter pelo menos 6 caracteres',
+        authConfirmPasswordLabel: 'Confirmar Senha',
+        authConfirmPasswordPlaceholder: '••••••••',
+        authConfirmPasswordError: 'As senhas não coincidem',
+        btnForgotPassword: 'Esqueceu sua senha?',
+        btnAuthSubmitLogin: 'Entrar',
+        btnAuthSubmitRegister: 'Criar Conta',
+        btnBackToLandingText: 'Voltar ao Início',
+        btnBackToLandingTitle: 'Voltar ao Início',
+        btnLogoutText: 'Sair',
+        btnLogoutTitle: 'Sair',
+        landingTagline: 'Ferramentas Profissionais de Gestão',
+        calculatorTagline: 'Calculadora de Orçamentos e Serviços Técnicos',
+        quoteFormTitle: 'Novo Orçamento',
+        clientNameLabel: 'Nome do Cliente',
+        clientNamePlaceholder: 'Ex. João Silva',
+        clientNameError: 'Este campo é obrigatório',
+        deviceModelLabel: 'Dispositivo / Equipamento',
+        deviceModelPlaceholder: 'Buscar ou selecionar dispositivo...',
+        deviceInputNote: 'Digite para filtrar laptops, computadores, componentes e marcas como Asus, HP, Dell, Lenovo, MSI.',
+        deviceModelError: 'Este campo é obrigatório',
+        partsCostLabel: 'Custo de Peças ($)',
+        partsCostPlaceholder: '0,00',
+        partsCostError: 'Mínimo 0',
+        laborCostLabel: 'Mão de Obra ($)',
+        laborCostPlaceholder: '0,00',
+        laborCostError: 'Mínimo 0',
+        btnCalculateText: 'Calcular e Salvar',
+        dbStatusLabel: 'BD Local',
+        livePreviewBadge: 'Prévia ao Vivo',
+        breakdownTitle: 'Detalhamento do Orçamento',
+        subtotalLabel: 'Subtotal (Peças + Mão de Obra)',
+        ivaLabel: 'IVA (15%)',
+        totalLabel: 'Total Geral',
+        chartTitle: 'Gráfico de custos',
+        partsLabel: 'Peças',
+        laborLabel: 'Mão de obra',
+        ivaChartLabel: 'IVA',
+        historyTitle: 'Histórico de Orçamentos',
+        searchHistoryPlaceholder: 'Buscar por cliente ou equipamento...',
+        historyEmptyText: 'Não há orçamentos registrados no histórico.',
+        btnClearHistoryText: 'Limpar Todo o Histórico',
+        footerLine1: '© 2026 AC Manager. Gestão profissional de orçamentos para serviços técnicos.',
+        footerLine2: 'Demonstração funcional | Oficina e projeto técnico',
+        modalTitle: 'Tem certeza de que deseja continuar?',
+        modalDescription: 'Esta ação excluirá permanentemente todos os orçamentos salvos no histórico. Esta operação não pode ser desfeita.',
+        modalBtnCancel: 'Cancelar',
+        modalBtnConfirm: 'Sim, apagar tudo',
+        authFormInvalid: 'Por favor, corrija os erros no formulário de acesso.',
+        firebaseLoginSuccess: 'Sessão iniciada no Firebase: {email}',
+        firebaseAccountCreated: 'Conta do Firebase criada: {email}',
+        simulatorEmailNotRegistered: 'O e-mail não está registrado no simulador.',
+        simulatorWrongPassword: 'Senha incorreta.',
+        simulatorLoginSuccess: 'Entrou com sucesso.',
+        simulatorEmailAlreadyRegistered: 'Este e-mail já está registrado.',
+        simulatorAccountCreated: 'Conta criada com sucesso. Por favor, faça login.',
+        passwordResetInvalidEmail: 'Por favor, insira um e-mail válido no campo acima.',
+        passwordResetSentFirebase: 'Um e-mail real de redefinição de senha foi enviado para: {email}. Verifique sua caixa de entrada.',
+        passwordResetSentSimulator: '[SIMULAÇÃO] E-mail enviado com sucesso para: {email}. Em um ambiente real com Firebase, o método sendPasswordResetEmail enviaria um link de recuperação.',
+        firebaseSessionClosed: 'Sessão do Firebase encerrada.',
+        localSessionClosed: 'Sessão local finalizada.',
+        quoteSaved: 'Orçamento para {clientName} salvo.',
+        quoteDeleted: 'Orçamento de {clientName} excluído.',
+        historyCleared: 'O histórico do técnico foi limpo.',
+        historyNoResults: 'Não foram encontrados resultados para "{query}".',
+        firebaseErrorInvalidEmail: 'Formato de e-mail inválido.',
+        firebaseErrorUserDisabled: 'Esta conta foi desativada.',
+        firebaseErrorUserNotFound: 'Nenhum usuário registrado com este e-mail.',
+        firebaseErrorWrongPassword: 'Senha incorreta.',
+        firebaseErrorEmailAlreadyInUse: 'Este e-mail já está associado a outra conta.',
+        firebaseErrorWeakPassword: 'A senha deve ter pelo menos 6 caracteres.',
+        firebaseErrorDefault: 'Ocorreu um erro no servidor de autenticação.',
+        formIncompleteBudget: 'Por favor, complete os campos do orçamento.',
+        recordsBadge: '{count} orçamentos',
+        deleteRowTitle: 'Excluir este orçamento',
+        deviceNoResults: 'Nenhum dispositivo encontrado',
+        deviceSelectTitle: 'Selecionar {device}',
+        fullIdTitle: 'ID completo: {id}',
+        dbStatusFirebase: 'Firebase Cloud',
+        dbStatusLocal: 'BD Local',
+        languageChanged: 'Idioma alterado para {lang}.',
+    }
+};
+
+function t(key) {
+    return TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key] ? TRANSLATIONS[currentLanguage][key] : '';
+}
+
+function translateMessage(key, params = {}) {
+    const template = t(key);
+    return template.replace(/\{(\w+)\}/g, (_, paramName) => params[paramName] != null ? params[paramName] : '');
+}
+
+function translatePage(lang) {
+    if (!TRANSLATIONS[lang]) {
+        lang = 'es';
+    }
+
+    currentLanguage = lang;
+    document.documentElement.lang = lang;
+    document.title = TRANSLATIONS[lang].pageTitle;
+
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+        metaDescription.setAttribute('content', TRANSLATIONS[lang].metaDescription);
+    }
+
+    document.querySelectorAll('[data-i18n]').forEach((element) => {
+        const key = element.dataset.i18n;
+        if (key && TRANSLATIONS[lang][key] != null) {
+            element.textContent = TRANSLATIONS[lang][key];
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+        const key = element.dataset.i18nPlaceholder;
+        if (key && TRANSLATIONS[lang][key] != null) {
+            element.placeholder = TRANSLATIONS[lang][key];
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+        const key = element.dataset.i18nTitle;
+        if (key && TRANSLATIONS[lang][key] != null) {
+            element.title = TRANSLATIONS[lang][key];
+        }
+    });
+
+    if (selectedLanguage) {
+        selectedLanguage.textContent = TRANSLATIONS[lang].languageName;
+    }
+
+    languageOptionButtons.forEach((option) => {
+        if (option.dataset.lang === lang) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
+        }
+    });
+
+    setAuthMode(authMode);
+}
+
+function getCurrentLanguageLabel() {
+    return TRANSLATIONS[currentLanguage] ? TRANSLATIONS[currentLanguage].languageName : 'Español';
+}
 
 function initLanguageSwitcher() {
     if (!languageToggle || !languageOptions || !selectedLanguage) return;
@@ -138,13 +638,16 @@ function initLanguageSwitcher() {
 
     languageOptionButtons.forEach((button) => {
         button.addEventListener('click', () => {
-            const selectedText = button.textContent.trim();
-            selectedLanguage.textContent = selectedText;
-            languageOptionButtons.forEach((option) => option.classList.remove('active'));
-            button.classList.add('active');
+            const lang = button.dataset.lang;
+            if (!TRANSLATIONS[lang]) return;
+
+            translatePage(lang);
+            localStorage.setItem('acManagerLanguage', lang);
             closeLanguageMenu();
+
             if (typeof showToast === 'function') {
-                showToast(`Idioma cambiado a ${selectedText}.`, 'success');
+                const message = TRANSLATIONS[lang].languageChanged.replace('{lang}', TRANSLATIONS[lang].languageName);
+                showToast(message, 'success');
             }
         });
     });
@@ -242,26 +745,30 @@ function setAuthMode(mode) {
         tabLogin.classList.add('active');
         tabRegister.classList.remove('active');
         
-        authTitle.textContent = "Bienvenido de Nuevo";
-        authSubtitle.textContent = "Ingresa tus credenciales para acceder a la calculadora.";
+        tabLogin.textContent = t('authTabLogin');
+        tabRegister.textContent = t('authTabRegister');
+        authTitle.textContent = t('authTitleLogin');
+        authSubtitle.textContent = t('authSubtitleLogin');
         
         // Ocultar confirmación de contraseña y enlace de "¿Olvidaste tu contraseña?"
         confirmPasswordGroup.classList.add('hidden');
         btnForgotPassword.classList.remove('hidden');
         
-        btnAuthSubmit.querySelector('span').textContent = "Iniciar Sesión";
+        btnAuthSubmit.querySelector('span').textContent = t('btnAuthSubmitLogin');
     } else {
         tabLogin.classList.remove('active');
         tabRegister.classList.add('active');
         
-        authTitle.textContent = "Crea tu Cuenta";
-        authSubtitle.textContent = "Regístrate como técnico autorizado de SoporteTec.";
+        tabLogin.textContent = t('authTabLogin');
+        tabRegister.textContent = t('authTabRegister');
+        authTitle.textContent = t('authTitleRegister');
+        authSubtitle.textContent = t('authSubtitleRegister');
         
         // Mostrar confirmación de contraseña y ocultar olvido de contraseña
         confirmPasswordGroup.classList.remove('hidden');
         btnForgotPassword.classList.add('hidden');
         
-        btnAuthSubmit.querySelector('span').textContent = "Crear Cuenta";
+        btnAuthSubmit.querySelector('span').textContent = t('btnAuthSubmitRegister');
     }
 }
 
@@ -323,7 +830,7 @@ authForm.addEventListener('submit', (e) => {
     }
 
     if (!isValid) {
-        showToast("Por favor, corrige los errores en el formulario de acceso.", "error");
+        showToast(translateMessage('authFormInvalid'), 'error');
         return;
     }
 
@@ -344,7 +851,7 @@ function processFirebaseAuth(email, password) {
         authService.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
-                showToast(`Sesión iniciada con Firebase: ${user.email}`);
+                showToast(translateMessage('firebaseLoginSuccess', { email: user.email }));
                 handleSuccessfulLogin(user.email);
             })
             .catch((error) => {
@@ -356,7 +863,7 @@ function processFirebaseAuth(email, password) {
         authService.createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
-                showToast(`Cuenta de Firebase creada: ${user.email}`);
+                showToast(translateMessage('firebaseAccountCreated', { email: user.email }));
                 handleSuccessfulLogin(user.email);
             })
             .catch((error) => {
@@ -382,19 +889,19 @@ function processSimulatedAuth(email, password) {
         const userFound = users.find(u => u.email.toLowerCase() === email.toLowerCase());
         
         if (!userFound) {
-            showToast("El correo electrónico no está registrado en el simulador.", "error");
+            showToast(translateMessage('simulatorEmailNotRegistered'), 'error');
             inputAuthEmail.closest('.form-group').classList.add('has-error');
             return;
         }
         
         if (userFound.password !== password) {
-            showToast("Contraseña incorrecta.", "error");
+            showToast(translateMessage('simulatorWrongPassword'), 'error');
             inputAuthPassword.closest('.form-group').classList.add('has-error');
             return;
         }
 
         // Éxito en el login simulado
-        showToast('Se inició correctamente');
+        showToast(translateMessage('simulatorLoginSuccess'));
 
         // Guardamos estado de sesión en localStorage para persistencia de sesión
         localStorage.setItem(STORAGE_SESSION_KEY, userFound.email);
@@ -404,7 +911,7 @@ function processSimulatedAuth(email, password) {
         // Comprobar si el usuario ya existe
         const userExists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
         if (userExists) {
-            showToast("Este correo electrónico ya está registrado.", "error");
+            showToast(translateMessage('simulatorEmailAlreadyRegistered'), 'error');
             inputAuthEmail.closest('.form-group').classList.add('has-error');
             return;
         }
@@ -415,7 +922,7 @@ function processSimulatedAuth(email, password) {
         localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
 
         // No iniciar sesión automáticamente: requerimos que el usuario inicie sesión después de crear la cuenta
-        showToast('Cuenta creada correctamente. Por favor, inicie sesión.', 'success');
+        showToast(translateMessage('simulatorAccountCreated'), 'success');
         // Cambiar al modo login y rellenar el email para comodidad
         setAuthMode('login');
         inputAuthEmail.value = email;
@@ -434,7 +941,7 @@ btnForgotPassword.addEventListener('click', () => {
 
     // Validación mínima del correo antes de enviar restablecimiento
     if (!emailRegex.test(email)) {
-        showToast("Por favor, ingresa un correo electrónico válido en el campo superior.", "error");
+        showToast(translateMessage('passwordResetInvalidEmail'), 'error');
         inputAuthEmail.closest('.form-group').classList.add('has-error');
         return;
     }
@@ -443,14 +950,14 @@ btnForgotPassword.addEventListener('click', () => {
         // Llamada nativa a Firebase para enviar correo de restablecimiento real
         authService.sendPasswordResetEmail(email)
             .then(() => {
-                showToast(`Se ha enviado un correo real de restablecimiento de contraseña a: ${email}. Revisa tu bandeja de entrada.`);
+                showToast(translateMessage('passwordResetSentFirebase', { email }));
             })
             .catch((error) => {
-                showToast(translateFirebaseError(error.code), "error");
+                showToast(translateFirebaseError(error.code), 'error');
             });
     } else {
         // Simulación visual del correo de restablecimiento
-        showToast(`[SIMULACIÓN] Correo enviado con éxito a: ${email}. En un entorno real con Firebase, el método 'sendPasswordResetEmail' enviaría un enlace de recuperación.`);
+        showToast(translateMessage('passwordResetSentSimulator', { email }));
     }
 });
 
@@ -460,15 +967,16 @@ btnForgotPassword.addEventListener('click', () => {
  * @returns {string} - Mensaje en español
  */
 function translateFirebaseError(code) {
-    switch (code) {
-        case 'auth/invalid-email': return 'Formato de correo electrónico inválido.';
-        case 'auth/user-disabled': return 'Esta cuenta ha sido inhabilitada.';
-        case 'auth/user-not-found': return 'No existe ningún usuario registrado con este correo.';
-        case 'auth/wrong-password': return 'Contraseña incorrecta.';
-        case 'auth/email-already-in-use': return 'Este correo ya está asociado a otra cuenta.';
-        case 'auth/weak-password': return 'La contraseña debe tener mínimo 6 caracteres.';
-        default: return 'Ocurrió un error en el servidor de autenticación.';
-    }
+    const errorKeyMap = {
+        'auth/invalid-email': 'firebaseErrorInvalidEmail',
+        'auth/user-disabled': 'firebaseErrorUserDisabled',
+        'auth/user-not-found': 'firebaseErrorUserNotFound',
+        'auth/wrong-password': 'firebaseErrorWrongPassword',
+        'auth/email-already-in-use': 'firebaseErrorEmailAlreadyInUse',
+        'auth/weak-password': 'firebaseErrorWeakPassword'
+    };
+    const translationKey = errorKeyMap[code] || 'firebaseErrorDefault';
+    return translateMessage(translationKey);
 }
 
 /**
@@ -479,7 +987,7 @@ function handleSuccessfulLogin(email) {
     currentUser = email;
     
     // Cambiar la etiqueta de la base de datos según si está Firebase activo o local
-    dbStatusLabel.textContent = isFirebaseEnabled ? "Firebase Cloud" : "Local DB";
+    dbStatusLabel.textContent = translateMessage(isFirebaseEnabled ? 'dbStatusFirebase' : 'dbStatusLocal');
     
     // Limpiamos los inputs del formulario de acceso
     authForm.reset();
@@ -498,7 +1006,7 @@ function handleSuccessfulLogin(email) {
  */
 function restoreSession(email) {
     currentUser = email;
-    dbStatusLabel.textContent = isFirebaseEnabled ? "Firebase Cloud" : "Local DB";
+    dbStatusLabel.textContent = translateMessage(isFirebaseEnabled ? 'dbStatusFirebase' : 'dbStatusLocal');
     loadBudgetsFromLocalStorage();
 }
 
@@ -511,13 +1019,13 @@ btnLogout.addEventListener('click', () => {
             .then(() => {
                 currentUser = null;
                 navigateTo('authSection');
-                showToast("Sesión de Firebase cerrada.");
+                showToast(translateMessage('firebaseSessionClosed'));
             });
     } else {
         currentUser = null;
         localStorage.removeItem(STORAGE_SESSION_KEY);
         navigateTo('authSection');
-        showToast("Sesión local finalizada.");
+        showToast(translateMessage('localSessionClosed'));
     }
 });
 
@@ -636,13 +1144,13 @@ function renderDeviceSuggestions(query = '') {
     const items = filtered.slice(0, 8);
 
     if (items.length === 0) {
-        deviceSuggestions.innerHTML = `<div class="device-suggestion-item">No se encontraron dispositivos</div>`;
+        deviceSuggestions.innerHTML = `<div class="device-suggestion-item">${t('deviceNoResults')}</div>`;
         deviceSuggestions.classList.remove('hidden');
         return;
     }
 
     deviceSuggestions.innerHTML = items.map(device => `
-        <button type="button" class="device-suggestion-item" data-device="${device.name}" title="Seleccionar ${device.name}">
+        <button type="button" class="device-suggestion-item" data-device="${device.name}" title="${translateMessage('deviceSelectTitle', { device: device.name })}">
             <span>${device.name}</span>
             <span>${device.category}</span>
         </button>
@@ -772,16 +1280,16 @@ function renderHistoryTable(filterText = '') {
                String(item.id).includes(query);
     });
 
-    recordsBadge.textContent = `${budgetList.length} Cotizaciones`;
+    recordsBadge.textContent = translateMessage('recordsBadge', { count: budgetList.length });
     btnClearHistory.disabled = budgetList.length === 0;
 
     if (filteredList.length === 0) {
         const trEmpty = document.createElement('tr');
         trEmpty.className = 'empty-row-placeholder';
         
-        let emptyMessage = 'No hay presupuestos registrados en el historial.';
+        let emptyMessage = t('historyEmptyText');
         if (query !== '') {
-            emptyMessage = `No se encontraron resultados para "${filterText}".`;
+            emptyMessage = translateMessage('historyNoResults', { query: filterText });
         }
 
         trEmpty.innerHTML = `
@@ -806,13 +1314,13 @@ function renderHistoryTable(filterText = '') {
         const displayId = `#${String(item.id).slice(-6)}`;
 
         tr.innerHTML = `
-            <td class="col-id" title="ID completo: ${item.id}">${displayId}</td>
+            <td class="col-id" title="${translateMessage('fullIdTitle', { id: item.id })}">${displayId}</td>
             <td>${escapeHTML(item.clientName)}</td>
             <td>${escapeHTML(item.deviceModel)}</td>
             <td class="col-total">${formatCurrency(item.total)}</td>
             <td>${item.date}</td>
             <td class="col-actions">
-                <button class="btn-delete-row" data-id="${item.id}" title="Eliminar este presupuesto">
+                <button class="btn-delete-row" data-id="${item.id}" title="${t('deleteRowTitle')}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -871,7 +1379,7 @@ function addNewBudget() {
     budgetList.push(newBudget);
     saveBudgetsToLocalStorage();
     renderHistoryTable(searchHistory.value);
-    showToast(`Presupuesto para ${newBudget.clientName} guardado.`);
+    showToast(translateMessage('quoteSaved', { clientName: newBudget.clientName }));
 
     budgetForm.reset();
     updateBreakdownPreview();
@@ -884,14 +1392,14 @@ function deleteSingleBudget(id) {
     budgetList = budgetList.filter(item => item.id !== id);
     saveBudgetsToLocalStorage();
     renderHistoryTable(searchHistory.value);
-    showToast(`Presupuesto de ${clientName} eliminado.`, 'error');
+    showToast(translateMessage('quoteDeleted', { clientName }), 'error');
 }
 
 function clearAllHistory() {
     budgetList = [];
     saveBudgetsToLocalStorage();
     renderHistoryTable();
-    showToast('El historial del técnico ha sido vaciado.', 'error');
+    showToast(translateMessage('historyCleared'), 'error');
 }
 
 // Modal de limpieza
@@ -924,7 +1432,7 @@ budgetForm.addEventListener('submit', (e) => {
     if (isClientValid && isDeviceValid && isPartsValid && isLaborValid) {
         addNewBudget();
     } else {
-        showToast('Por favor, completa los campos del presupuesto.', 'error');
+        showToast(translateMessage('formIncompleteBudget'), 'error');
     }
 });
 
@@ -964,5 +1472,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     initLanguageSwitcher();
+
+    const savedLanguage = localStorage.getItem('acManagerLanguage');
+    if (savedLanguage && TRANSLATIONS[savedLanguage]) {
+        currentLanguage = savedLanguage;
+    }
+    translatePage(currentLanguage);
+
     initSectionLoaderLinks();
 });
