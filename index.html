@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gestor de presupuestos para talleres técnicos: cotiza, guarda y consulta servicios con una interfaz profesional.">
+    <title>AC Manager - Gestor Profesional de Presupuestos</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- EmailJS SDK: Permite enviar correos reales directamente desde JavaScript sin backend -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div id="pageLoader" class="page-loader hidden" aria-hidden="true">
+            <div class="page-loader-inner">
+                <div class="loader-ring"></div>
+                <span class="loader-text">Cargando...</span>
+            </div>
+        </div>
+        <main>
+        <!-- =====================================================================
+             1. SECCIÓN EXPLICATIVA (LANDING PAGE)
+             ===================================================================== -->
+        <section id="landingSection" class="view-section">
+            <header class="app-header">
+                <div class="header-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="icon-logo logo-a">
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00c6ff"/>
+                                <stop offset="100%" stop-color="#005eaa"/>
+                            </linearGradient>
+                            <filter id="blurGlow" x="-40%" y="-40%" width="180%" height="180%">
+                                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="60" cy="60" r="54" fill="url(#logoGradient)" opacity="0.18"/>
+                        <path d="M34 88 L54 30 L66 30 L86 88 L68 88 L64 74 L48 74 L44 88 Z" fill="url(#logoGradient)" filter="url(#blurGlow)"/>
+                        <path d="M56 60 L64 42 L72 60 Z" fill="#ffffff" opacity="0.8"/>
+                    </svg>
+                    <div class="logo-text">
+                        <h1>AC <span>Manager</span></h1>
+                        <p class="tagline">Herramientas Profesionales de Gestión</p>
+                    </div>
+                </div>
+                <nav class="landing-nav" aria-label="Navegación principal">
+                    <a href="#funcionesSection">Funciones</a>
+                    <a href="#solucionesSection">Soluciones</a>
+                    <a href="#beneficiosSection">Beneficios</a>
+                </nav>
+            </header>
+
+            <div class="landing-content">
+                <div class="hero-block">
+                    <span class="badge-accent">Solución Técnica Profesional</span>
+                    <h2>Gestiona cotizaciones con precisión y diseño corporativo</h2>
+                    <p class="hero-description">
+                        AC Manager es una herramienta pensada para talleres técnicos que necesitan cotizar servicios, controlar costos de repuestos y mantener un historial ordenado y fácil de consultar.
+                    </p>
+                </div>
+
+                <!-- Tarjeta informativa del alcance -->
+                <div class="card card-info-landing">
+                    <h3>¿Por qué elegir AC Manager?</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="info-icon">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                    <line x1="12" y1="4" x2="12" y2="20"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Precisión de Costos</h4>
+                                <p>Suma automáticamente los repuestos y mano de obra para evitar errores manuales de cálculo.</p>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="info-icon">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Cálculo de Impuestos</h4>
+                                <p>Aplica instantáneamente la tasa del IVA del 15% sobre el subtotal de los servicios.</p>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="info-icon">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Base de Datos Interna</h4>
+                                <p>Guarda y persiste los registros del historial mediante el uso inteligente de localStorage.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guía paso a paso -->
+                <div class="guide-block">
+                    <h3>Guía de Uso Rápido</h3>
+                    <div class="steps-container">
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <h4>Accede de forma segura</h4>
+                            <p>Inicia sesión para ingresar al panel exclusivo de técnicos y trabajar con datos protegidos.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <h4>Ingresa los Datos</h4>
+                            <p>Escribe el nombre del cliente, dispositivo y costos del servicio técnico.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <h4>Guarda e Historial</h4>
+                            <p>Visualiza el desglose en tiempo real y guarda la cotización en el historial persistente.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="funcionesSection" class="extra-section">
+                    <div class="section-header">
+                        <span class="section-label">Funciones</span>
+                        <h3>Automatiza cada paso de tu flujo de trabajo</h3>
+                    </div>
+                    <div class="feature-grid">
+                        <article class="feature-card">
+                            <div class="feature-icon">💾</div>
+                            <h4>Registro instantáneo</h4>
+                            <p>Guarda presupuestos y consulta el historial con un solo clic.</p>
+                        </article>
+                        <article class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h4>Desglose claro</h4>
+                            <p>Visualiza subtotal, IVA y total de forma ordenada.</p>
+                        </article>
+                        <article class="feature-card">
+                            <div class="feature-icon">🧾</div>
+                            <h4>Reportes rápidos</h4>
+                            <p>Genera cotizaciones con formato profesional para tus clientes.</p>
+                        </article>
+                        <article class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <h4>Control de acceso</h4>
+                            <p>La sesión y el historial quedan vinculados al técnico que ingresa.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="solucionesSection" class="extra-section split-section">
+                    <div class="solution-copy">
+                        <span class="section-label">Soluciones</span>
+                        <h3>Resuelve problemas reales de tu taller</h3>
+                        <p>AC Manager centraliza tus presupuestos, evita cálculos manuales y reduce tiempos de respuesta al cliente.</p>
+                        <ul class="solution-list">
+                            <li>Control de inventario básico y costos de repuestos.</li>
+                            <li>Historial accesible para cada presupuesto guardado.</li>
+                            <li>Interfaz clara para técnicos y gerentes.</li>
+                        </ul>
+                    </div>
+                    <div class="solution-visual">
+                        <div class="visual-card">
+                            <div class="visual-header">AC Manager</div>
+                            <div class="visual-body">
+                                <div class="visual-stat">
+                                    <strong>+48%</strong>
+                                    <span>Rapidez en cotizaciones</span>
+                                </div>
+                                <div class="visual-stat">
+                                    <strong>5 pasos</strong>
+                                    <span>para presupuestos perfectos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="beneficiosSection" class="extra-section">
+                    <div class="section-header">
+                        <span class="section-label">Beneficios</span>
+                        <h3>Qué ganas al usar AC Manager</h3>
+                    </div>
+                    <div class="benefits-grid">
+                        <div class="benefit-card">
+                            <h4>Más eficiencia</h4>
+                            <p>Reduce el tiempo en formular una cotización y atiende más clientes por día.</p>
+                        </div>
+                        <div class="benefit-card">
+                            <h4>Menos errores</h4>
+                            <p>Los cálculos automáticos evitan fallos en impuestos y totales.</p>
+                        </div>
+                        <div class="benefit-card">
+                            <h4>Mayor confianza</h4>
+                            <p>Presenta presupuestos profesionales que generan seguridad en tus clientes.</p>
+                        </div>
+                        <div class="benefit-card">
+                            <h4>Historial organizado</h4>
+                            <p>Mantén todos tus trabajos guardados y listos para consulta futura.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Botón de acción principal -->
+                <div class="landing-action">
+                    <button id="btnEnterApp" class="btn-primary btn-large">
+                        <span>Comenzar ahora</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                            <polyline points="12 5 19 12 12 19"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             2. PANTALLA DE AUTENTICACIÓN (LOGIN Y REGISTRO)
+             ===================================================================== -->
+        <section id="authSection" class="view-section hidden">
+            <div class="auth-container">
+                <div class="card card-auth glow-cyan">
+                    
+                    <div class="auth-tabs">
+                        <button id="tabLogin" class="tab-btn active">Iniciar Sesión</button>
+                        <button id="tabRegister" class="tab-btn">Crear Cuenta</button>
+                    </div>
+
+                    <div class="auth-header">
+                        <h2 id="authTitle">Bienvenido de Nuevo</h2>
+                        <p id="authSubtitle">Ingresa tus credenciales para acceder a la calculadora.</p>
+                    </div>
+
+                    <form id="authForm" novalidate>
+                        <!-- Correo Electrónico -->
+                        <div class="form-group">
+                            <label for="authEmail">Correo Electrónico</label>
+                            <div class="input-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <input type="email" id="authEmail" placeholder="correo@ejemplo.com" required autocomplete="off">
+                            </div>
+                            <span class="error-msg" id="authEmailError">Escribe un correo electrónico válido</span>
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="form-group">
+                            <label for="authPassword">Contraseña</label>
+                            <div class="input-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                <input type="password" id="authPassword" placeholder="••••••••" required>
+                            </div>
+                            <span class="error-msg" id="authPasswordError">La contraseña debe tener al menos 6 caracteres</span>
+                        </div>
+
+                        <!-- Confirmar Contraseña (solo en registro) -->
+                        <div class="form-group hidden" id="confirmPasswordGroup">
+                            <label for="authConfirmPassword">Confirmar Contraseña</label>
+                            <div class="input-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                <input type="password" id="authConfirmPassword" placeholder="••••••••">
+                            </div>
+                            <span class="error-msg" id="authConfirmPasswordError">Las contraseñas no coinciden</span>
+                        </div>
+
+                        <div class="auth-options" id="authOptionsBlock">
+                            <button type="button" id="btnForgotPassword" class="btn-link">¿Olvidaste tu contraseña?</button>
+                        </div>
+
+                        <button type="submit" id="btnAuthSubmit" class="btn-primary">
+                            <span>Iniciar Sesión</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                                <polyline points="10 17 15 12 10 7"/>
+                                <line x1="15" y1="12" x2="3" y2="12"/>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <div class="auth-footer-back">
+                        <button type="button" id="btnBackToLanding" class="btn-link-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-small">
+                                <line x1="19" y1="12" x2="5" y2="12"/>
+                                <polyline points="12 19 5 12 12 5"/>
+                            </svg>
+                            <span>Volver al Inicio</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             3. SECCIÓN CALCULADORA E HISTORIAL PRINCIPAL
+             ===================================================================== -->
+        <section id="calculatorSection" class="view-section hidden">
+            
+            <header class="app-header">
+                <div class="header-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="icon-logo logo-a">
+                        <defs>
+                            <linearGradient id="logoGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00c6ff"/>
+                                <stop offset="100%" stop-color="#005eaa"/>
+                            </linearGradient>
+                            <filter id="blurGlow2" x="-40%" y="-40%" width="180%" height="180%">
+                                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <circle cx="60" cy="60" r="54" fill="url(#logoGradient2)" opacity="0.18"/>
+                        <path d="M34 88 L54 30 L66 30 L86 88 L68 88 L64 74 L48 74 L44 88 Z" fill="url(#logoGradient2)" filter="url(#blurGlow2)"/>
+                        <path d="M56 60 L64 42 L72 60 Z" fill="#ffffff" opacity="0.8"/>
+                    </svg>
+                    <div class="logo-text">
+                        <h1>AC <span>Manager</span></h1>
+                        <p class="tagline">Calculadora de Presupuestos y Servicios Técnicos</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="system-status">
+                        <span class="status-indicator"></span>
+                        <span class="status-text" id="dbStatusLabel">Local DB</span>
+                    </div>
+                    <button id="btnLogout" class="btn-logout" title="Cerrar Sesión">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-logout-icon">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="app-content">
+                
+                <!-- COLUMNA IZQUIERDA: Formulario -->
+                <section class="section-form">
+                    <div class="card card-form">
+                        <div class="card-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-header-icon">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                            <h2>Nueva Cotización</h2>
+                        </div>
+                        
+                        <form id="budgetForm" novalidate>
+                            <div class="form-group">
+                                <label for="clientName">Nombre del Cliente</label>
+                                <div class="input-wrapper">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    <input type="text" id="clientName" placeholder="Ej. Juan Pérez" required autocomplete="off">
+                                </div>
+                                <span class="error-msg" id="clientNameError">Este campo es obligatorio</span>
+                            </div>
+
+                            <div class="form-group device-search-group">
+                                <label for="deviceModel">Dispositivo / Equipo</label>
+                                <div class="input-wrapper">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                        <line x1="8" y1="21" x2="16" y2="21"/>
+                                        <line x1="12" y1="17" x2="12" y2="21"/>
+                                    </svg>
+                                    <input type="text" id="deviceModel" placeholder="Buscar o seleccionar dispositivo..." required autocomplete="off">
+                                </div>
+                                <p class="input-note">Escribe para filtrar dispositivos de video juegos, PC y componentes.</p>
+                                <div class="device-suggestions hidden" id="deviceSuggestions" role="listbox" aria-label="Sugerencias de dispositivos"></div>
+                                <span class="error-msg" id="deviceModelError">Este campo es obligatorio</span>
+                            </div>
+
+                            <div class="form-row-costs">
+                                <div class="form-group cost-group">
+                                    <label for="partsCost">Costo Repuestos ($)</label>
+                                    <div class="input-wrapper money-wrapper">
+                                        <span class="currency-symbol">$</span>
+                                        <input type="number" id="partsCost" placeholder="0.00" min="0" step="0.01" required>
+                                    </div>
+                                    <span class="error-msg" id="partsCostError">Mínimo 0</span>
+                                </div>
+
+                                <div class="form-group cost-group">
+                                    <label for="laborCost">Mano de Obra ($)</label>
+                                    <div class="input-wrapper money-wrapper">
+                                        <span class="currency-symbol">$</span>
+                                        <input type="number" id="laborCost" placeholder="0.00" min="0" step="0.01" required>
+                                    </div>
+                                    <span class="error-msg" id="laborCostError">Mínimo 0</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="btnCalculate" class="btn-primary">
+                                <span class="btn-text">Calcular y Guardar</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 8 8 12 12 16"/>
+                                    <line x1="16" y1="12" x2="8" y2="12"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- COLUMNA DERECHA: Desglose e Historial -->
+                <section class="section-results">
+                    
+                    <div class="card card-breakdown glow-cyan">
+                        <div class="card-badge">Vista Previa En Vivo</div>
+                        <div class="card-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-header-icon color-cyan">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                            <h2>Desglose del Presupuesto</h2>
+                        </div>
+
+                        <div class="breakdown-details">
+                            <div class="breakdown-row">
+                                <span class="row-label">Subtotal (Repuestos + Mano de Obra)</span>
+                                <span class="row-value" id="lblSubtotal">$0.00</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="row-label">IVA (15%)</span>
+                                <span class="row-value" id="lblIva">$0.00</span>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="breakdown-row row-total">
+                                <span class="row-label">Total General</span>
+                                <span class="row-value highlighted-total" id="lblTotal">$0.00</span>
+                            </div>
+                        </div>
+                        <div class="cost-chart">
+                            <div class="chart-title">Gráfico de costos</div>
+                            <div class="chart-row">
+                                <span>Repuestos</span>
+                                <div class="chart-track"><div class="chart-fill chart-parts" id="barParts"></div></div>
+                                <span class="chart-value" id="partsPercent">0%</span>
+                            </div>
+                            <div class="chart-row">
+                                <span>Mano de obra</span>
+                                <div class="chart-track"><div class="chart-fill chart-labor" id="barLabor"></div></div>
+                                <span class="chart-value" id="laborPercent">0%</span>
+                            </div>
+                            <div class="chart-row">
+                                <span>IVA</span>
+                                <div class="chart-track"><div class="chart-fill chart-iva" id="barIva"></div></div>
+                                <span class="chart-value" id="ivaPercent">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-history">
+                        <div class="card-header header-between">
+                            <div class="header-title-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-header-icon color-orange">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <h2>Historial de Cotizaciones</h2>
+                            </div>
+                            <span class="records-badge" id="recordsBadge">0 Cotizaciones</span>
+                        </div>
+
+                        <div class="history-filter-bar">
+                            <div class="search-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <input type="text" id="searchHistory" placeholder="Buscar por cliente o equipo...">
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="tableHistory">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Equipo</th>
+                                        <th>Total</th>
+                                        <th>Fecha</th>
+                                        <th class="col-actions">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bodyHistory">
+                                    <tr class="empty-row-placeholder">
+                                        <td colspan="6">
+                                            <div class="empty-state">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="empty-icon">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                                    <line x1="9" y1="9" x2="15" y2="9"/>
+                                                    <line x1="9" y1="13" x2="15" y2="13"/>
+                                                    <line x1="9" y1="17" x2="11" y2="17"/>
+                                                </svg>
+                                                <p>No hay presupuestos registrados en el historial.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-footer-actions">
+                            <button id="btnClearHistory" class="btn-secondary" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-secondary">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                                <span>Limpiar Todo el Historial</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 AC Manager. Gestión profesional de presupuestos para servicios técnicos.</p>
+            <p class="school-info">Demostración funcional | Taller y proyecto técnico</p>
+        </footer>
+    </div>
+
+    <!-- NOTIFICACIONES TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div class="modal-overlay" id="modalConfirm">
+        <div class="modal-card">
+            <div class="modal-icon-wrapper">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="modal-icon">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <h3>¿Estás seguro de continuar?</h3>
+            <p>Esta acción eliminará de forma permanente todas las cotizaciones guardadas en el historial. Esta operación no se puede deshacer.</p>
+            <div class="modal-buttons">
+                <button id="modalBtnCancel" class="btn-modal-cancel">Cancelar</button>
+                <button id="modalBtnConfirm" class="btn-modal-confirm">Sí, borrar todo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
