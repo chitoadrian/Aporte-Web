@@ -63,6 +63,22 @@
                     <a href="#solucionesSection">Soluciones</a>
                     <a href="#beneficiosSection">Beneficios</a>
                 </nav>
+                <div class="header-actions">
+                    <div class="language-selector">
+                        <button type="button" id="languageToggle" class="lang-button" aria-haspopup="true" aria-expanded="false">
+                            <span class="lang-icon">🌐</span>
+                            <span id="selectedLanguage">English</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="chevron-icon" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="language-options hidden" id="languageOptions" role="menu" aria-label="Opciones de idioma">
+                            <button type="button" class="language-option active" data-lang="en">English</button>
+                            <button type="button" class="language-option" data-lang="pt">Português</button>
+                            <button type="button" class="language-option" data-lang="es">Español</button>
+                        </div>
+                    </div>
+                </div>
             </header>
 
             <div class="landing-content">

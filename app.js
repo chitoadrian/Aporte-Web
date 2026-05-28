@@ -105,7 +105,50 @@ const modalConfirm = document.getElementById('modalConfirm');
 const modalBtnCancel = document.getElementById('modalBtnCancel');
 const modalBtnConfirm = document.getElementById('modalBtnConfirm');
 const pageLoader = document.getElementById('pageLoader');
+const languageToggle = document.getElementById('languageToggle');
+const selectedLanguage = document.getElementById('selectedLanguage');
+const languageOptions = document.getElementById('languageOptions');
+const languageOptionButtons = document.querySelectorAll('.language-option');
 let loaderTimeoutId = null;
+
+function initLanguageSwitcher() {
+    if (!languageToggle || !languageOptions || !selectedLanguage) return;
+
+    const closeLanguageMenu = () => {
+        languageOptions.classList.add('hidden');
+        languageToggle.setAttribute('aria-expanded', 'false');
+    };
+
+    languageToggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = !languageOptions.classList.contains('hidden');
+        if (isOpen) {
+            closeLanguageMenu();
+        } else {
+            languageOptions.classList.remove('hidden');
+            languageToggle.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!languageToggle.contains(event.target) && !languageOptions.contains(event.target)) {
+            closeLanguageMenu();
+        }
+    });
+
+    languageOptionButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const selectedText = button.textContent.trim();
+            selectedLanguage.textContent = selectedText;
+            languageOptionButtons.forEach((option) => option.classList.remove('active'));
+            button.classList.add('active');
+            closeLanguageMenu();
+            if (typeof showToast === 'function') {
+                showToast(`Idioma cambiado a ${selectedText}.`, 'success');
+            }
+        });
+    });
+}
 
 // ==========================================================================
 // 3. ESTADOS Y ALMACENAMIENTO DE LA APP
@@ -920,5 +963,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    initLanguageSwitcher();
     initSectionLoaderLinks();
 });
