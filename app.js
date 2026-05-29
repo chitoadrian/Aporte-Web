@@ -1,940 +1,155 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co"; 
+const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable__qQmLTITfpuVePH67M2dCw_CF8kmosN";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let isSupabaseEnabled = true;
 
-// ==========================================
-// FUNCIONES PARA MANEJAR DATOS CON SUPABASE
-// ==========================================
+// app.js - Conexión directa a Supabase y calculadora
 
-/**
- * FUNCIÓN PARA GUARDAR PRESUPUESTO (INSERT en Supabase)
- * Valida datos y guarda en la base de datos en la nube
- * @param {string} cliente - Nombre del cliente
- * @param {string} dispositivo - Modelo del dispositivo
- * @param {number} repuestos - Costo de repuestos
- * @param {number} manoObra - Costo de mano de obra
- * @param {string} email - Email del usuario (técnico)
- * @returns {Object|null} Objeto del presupuesto guardado o null si error
- */
-async function guardarPresupuestoSupabase(cliente, dispositivo, repuestos, manoObra, email = null) {
-    // Validar disponibilidad de Supabase
-    if (!isSupabaseEnabled || !supabase) {
-        console.warn("⚠️ Supabase no está disponible. El presupuesto se guardará solo en localStorage.");
-        return null;
-    }
+let budgetList = [];
 
-    // Validar parámetros
-    if (!cliente || !dispositivo) {
-        console.error("❌ Error: Cliente y dispositivo son requeridos");
-        return null;
-    }
+function formatCurrency(v){ return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(v); }
+function getCurrentFormattedDate(){ return new Date().toLocaleString('es-ES'); }
+function showToast(msg){ console.log('[AriManager]', msg); }
+function escapeHTML(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    try {
-        const subtotal = parseFloat(repuestos) + parseFloat(manoObra);
-        const calculatedIva = subtotal * 0.15;
-        const totalGeneral = subtotal + calculatedIva;
-        const emailTecnico = email || currentUser || 'tecnico@soporte.com';
-        const ahora = new Date().toISOString();
-
-        console.log("📤 Intentando guardar en Supabase:", {
-            cliente,
-            dispositivo,
-            repuestos: parseFloat(repuestos),
-            mano_obra: parseFloat(manoObra),
-            iva: calculatedIva,
-            total: totalGeneral,
-            email: emailTecnico,
-            fecha_creacion: ahora
-        });
-
-        const { data, error } = await supabase
-            .from('presupuestos')
-            .insert([
-                { 
-                    cliente: cliente, 
-                    dispositivo: dispositivo, 
-                    repuestos: parseFloat(repuestos), 
-                    mano_obra: parseFloat(manoObra), 
-                    iva: calculatedIva, 
-                    total: totalGeneral,
-                    email: emailTecnico,
-                    fecha_creacion: ahora
-                }
-            ])
-            .select();
-
-        if (error) {
-            console.error("❌ Error al guardar en Supabase:", {
-                message: error.message,
-                code: error.code,
-                details: error.details,
-                hint: error.hint
-            });
-            return null;
-        }
-
-        if (data && data.length > 0) {
-            console.log("✅ Presupuesto guardado con éxito en Supabase con ID:", data[0].id);
-            return data[0];
-        } else {
-            console.warn("⚠️ Supabase no retornó datos después de insertar");
-            return null;
-        }
-    } catch (error) {
-        console.error("❌ Excepción al guardar presupuesto en Supabase:", error.message || error);
-        return null;
-    }
-}
-
-/**
- * FUNCIÓN PARA LEER PRESUPUESTOS (SELECT de Supabase)
- * Obtiene historial de presupuestos de la base de datos en la nube
- * @param {string} email - Filtrar por email del técnico (opcional)
- * @returns {array} Array de presupuestos
- */
-async function obtenerHistorialSupabase(email = null) {
-    if (!isSupabaseEnabled || !supabase) {
-        console.warn("⚠️ Supabase no está disponible. Se usará solo localStorage.");
-        return [];
-    }
-
-    try {
-        console.log("📥 Obteniendo historial de Supabase para email:", email || "todos");
-        
-        let query = supabase
-            .from('presupuestos')
-            .select('*')
-            .order('id', { ascending: false });
-
-        // Si se proporciona email, filtrar solo los presupuestos de ese técnico
-        if (email && email !== 'undefined') {
-            query = query.eq('email', email);
-        }
-
-        const { data: presupuestos, error } = await query;
-
-        if (error) {
-            console.error("❌ Error al obtener historial de Supabase:", {
-                message: error.message,
-                code: error.code,
-                details: error.details
-            });
-            return [];
-        }
-
-        const cantidad = presupuestos ? presupuestos.length : 0;
-        console.log(`✅ Historial obtenido de Supabase: ${cantidad} presupuestos`);
-        return presupuestos || [];
-    } catch (error) {
-        console.error("❌ Excepción al obtener historial de Supabase:", error.message || error);
-        return [];
-    }
-}
-
-/**
- * FUNCIÓN PARA ELIMINAR PRESUPUESTO (DELETE de Supabase)
- * Elimina un presupuesto de la base de datos en la nube
- * @param {number} idRegistro - ID del presupuesto a eliminar
- * @returns {boolean} true si se eliminó correctamente, false en caso de error
- */
-async function eliminarPresupuestoSupabase(idRegistro) {
-    if (!isSupabaseEnabled || !supabase) {
-        console.warn("⚠️ Supabase no está disponible. Solo se eliminará del localStorage.");
-        return false;
-    }
-
-    if (!idRegistro) {
-        console.error("❌ Error: Se requiere un ID válido para eliminar");
-        return false;
-    }
-
-    try {
-        console.log("🗑️ Intentando eliminar presupuesto de Supabase con ID:", idRegistro);
-
-        const { error } = await supabase
-            .from('presupuestos')
-            .delete()
-            .eq('id', idRegistro);
-
-        if (error) {
-            console.error("❌ Error al eliminar de Supabase:", {
-                message: error.message,
-                code: error.code,
-                details: error.details
-            });
-            return false;
-        }
-
-        console.log("✅ Presupuesto eliminado correctamente de Supabase con ID:", idRegistro);
-        return true;
-    } catch (error) {
-        console.error("❌ Excepción al eliminar presupuesto de Supabase:", error.message || error);
-        return false;
-    }
-}
-
-/**
- * FUNCIÓN PARA SINCRONIZAR DATOS CON SUPABASE
- * Carga los presupuestos desde Supabase y los sincroniza con localStorage
- * Evita duplicados comparando IDs
- * @param {string} email - Email del técnico (opcional, para filtrar)
- */
-async function sincronizarDesdeSupabase(email = null) {
-    if (!isSupabaseEnabled || !supabase) {
-        console.log("ℹ️ Supabase no disponible. Usando solo localStorage.");
-        return;
-    }
-
-    try {
-        console.log("🔄 Iniciando sincronización con Supabase...");
-        const presupuestosSupabase = await obtenerHistorialSupabase(email || currentUser);
-        
-        if (presupuestosSupabase && presupuestosSupabase.length > 0) {
-            // Mapear datos de Supabase al formato local
-            const presupuestosMappeados = presupuestosSupabase.map(p => ({
-                id: p.id,
-                ownerEmail: p.email || currentUser,
-                clientName: p.cliente,
-                deviceModel: p.dispositivo,
-                partsCost: p.repuestos,
-                laborCost: p.mano_obra,
-                subtotal: p.repuestos + p.mano_obra,
-                iva: p.iva,
-                total: p.total,
-                date: new Date(p.fecha_creacion).toLocaleDateString('es-ES')
-            }));
-
-            // Actualizar la lista local (evitar duplicados)
-            const idsLocales = budgetList.map(b => b.id);
-            const nuevosBudgets = presupuestosMappeados.filter(
-                p => !idsLocales.includes(p.id)
-            );
-
-            if (nuevosBudgets.length > 0) {
-                budgetList = [...budgetList, ...nuevosBudgets];
-                saveBudgetsToLocalStorage();
-                console.log(`✅ Sincronización completada: ${nuevosBudgets.length} presupuestos nuevos agregados`);
-            } else {
-                console.log("ℹ️ No hay presupuestos nuevos desde Supabase");
-            }
-        } else {
-            console.log("ℹ️ No se encontraron presupuestos en Supabase");
-        }
-    } catch (error) {
-        console.error("❌ Error durante la sincronización de Supabase:", error);
-    }
-}
-
-// ==========================================================================
-// 2. SELECCIÓN DE ELEMENTOS DEL DOM
-// ==========================================================================
-
-// Secciones Principales (Vistas)
-const landingSection = document.getElementById('landingSection');
-const authSection = document.getElementById('authSection');
-const calculatorSection = document.getElementById('calculatorSection');
-
-// Botones de Navegación entre Vistas
-const btnEnterApp = document.getElementById('btnEnterApp');
-const btnBackToLanding = document.getElementById('btnBackToLanding');
-const btnLogout = document.getElementById('btnLogout');
-
-// Elementos de la Pantalla de Autenticación
-const authForm = document.getElementById('authForm');
-const tabLogin = document.getElementById('tabLogin');
-const tabRegister = document.getElementById('tabRegister');
-const authTitle = document.getElementById('authTitle');
-const authSubtitle = document.getElementById('authSubtitle');
-const inputAuthEmail = document.getElementById('authEmail');
-const inputAuthPassword = document.getElementById('authPassword');
-const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
-const inputAuthConfirmPassword = document.getElementById('authConfirmPassword');
-const btnForgotPassword = document.getElementById('btnForgotPassword');
-const btnAuthSubmit = document.getElementById('btnAuthSubmit');
-const dbStatusLabel = document.getElementById('dbStatusLabel');
-
-// Alertas de Error de Autenticación
-const errorAuthEmail = document.getElementById('authEmailError');
-const errorAuthPassword = document.getElementById('authPasswordError');
-const errorAuthConfirmPassword = document.getElementById('authConfirmPasswordError');
-
-// --- Elementos de la Calculadora (Manteniendo la estructura anterior) ---
+// Selectores esperados en tu HTML
 const budgetForm = document.getElementById('budgetForm');
 const inputClientName = document.getElementById('clientName');
 const inputDeviceModel = document.getElementById('deviceModel');
 const inputPartsCost = document.getElementById('partsCost');
 const inputLaborCost = document.getElementById('laborCost');
-
-const errorClientName = document.getElementById('clientNameError');
-const errorDeviceModel = document.getElementById('deviceModelError');
-const errorPartsCost = document.getElementById('partsCostError');
-const errorLaborCost = document.getElementById('laborCostError');
-
-const lblSubtotal = document.getElementById('lblSubtotal');
-const lblIva = document.getElementById('lblIva');
-const lblTotal = document.getElementById('lblTotal');
-const barParts = document.getElementById('barParts');
-const barLabor = document.getElementById('barLabor');
-const barIva = document.getElementById('barIva');
-const partsPercentLabel = document.getElementById('partsPercent');
-const laborPercentLabel = document.getElementById('laborPercent');
-const ivaPercentLabel = document.getElementById('ivaPercent');
-const deviceSuggestions = document.getElementById('deviceSuggestions');
-
+const inputEmail = document.getElementById('email');
 const bodyHistory = document.getElementById('bodyHistory');
 const searchHistory = document.getElementById('searchHistory');
 const recordsBadge = document.getElementById('recordsBadge');
 const btnClearHistory = document.getElementById('btnClearHistory');
-const quoteFormTitle = document.getElementById('quoteFormTitle');
+const lblSubtotal = document.getElementById('lblSubtotal');
+const lblIva = document.getElementById('lblIva');
+const lblTotal = document.getElementById('lblTotal');
 
-let selectedBudgetId = null;
+function calculateAmounts(parts, labor){ const p = Number(parts)||0; const l = Number(labor)||0; const subtotal = +(p + l).toFixed(2); const iva = +((subtotal * 0.15)).toFixed(2); const total = +(subtotal + iva).toFixed(2); return {subtotal, iva, total}; }
 
-const toastContainer = document.getElementById('toastContainer');
-const modalConfirm = document.getElementById('modalConfirm');
-const modalBtnCancel = document.getElementById('modalBtnCancel');
-const modalBtnConfirm = document.getElementById('modalBtnConfirm');
-const pageLoader = document.getElementById('pageLoader');
-const languageToggle = document.getElementById('languageToggle');
-const selectedLanguage = document.getElementById('selectedLanguage');
-const languageOptions = document.getElementById('languageOptions');
-const languageOptionButtons = document.querySelectorAll('.language-option');
+function renderHistory(filter=''){ if(!bodyHistory) return; bodyHistory.innerHTML=''; const q=(filter||'').toLowerCase().trim(); const items = budgetList.filter(b=> (b.clientName||'').toLowerCase().includes(q) || (b.deviceModel||'').toLowerCase().includes(q) ); if(recordsBadge) recordsBadge.textContent = `${budgetList.length} registros`; if(items.length===0){ bodyHistory.innerHTML = '<tr><td colspan="6">No hay registros</td></tr>'; return; } items.slice().reverse().forEach(it=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>#${String(it.id).slice(-6)}</td><td>${escapeHTML(it.clientName)}</td><td>${escapeHTML(it.deviceModel)}</td><td>${formatCurrency(it.total)}</td><td>${it.date}</td><td><button class="btn-delete" data-id="${it.id}">Borrar</button></td>`; bodyHistory.appendChild(tr); }); bodyHistory.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click', ()=>{ const id = btn.getAttribute('data-id'); budgetList = budgetList.filter(b=>String(b.id)!==String(id)); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); showToast('Registro eliminado'); })); }
 
-let currentLanguage = 'es';
-let loaderTimeoutId = null;
+const STORAGE_KEY = 'ari_manager_local_mirror';
+function loadLocalMirror(){ try{ const raw = localStorage.getItem(STORAGE_KEY); budgetList = raw?JSON.parse(raw):[]; }catch(e){ budgetList = []; } }
+function saveLocalMirror(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetList)); }catch(e){ console.warn(e); } }
 
-const TRANSLATIONS = {
-    es: {
-        languageName: 'Español',
-        pageTitle: 'AC Manager - Gestor Profesional de Presupuestos',
-        metaDescription: 'Gestor de presupuestos para talleres técnicos: cotiza, guarda y consulta servicios con una interfaz profesional.',
-        navFeatures: 'Funciones',
-        navSolutions: 'Soluciones',
-        navBenefits: 'Beneficios',
-        heroBadge: 'Solución Técnica Profesional',
-        heroTitle: 'Gestiona cotizaciones con precisión y diseño corporativo',
-        heroDescription: 'AC Manager es una herramienta pensada para talleres técnicos que necesitan cotizar servicios, controlar costos de repuestos y mantener un historial ordenado y fácil de consultar.',
-        whyTitle: '¿Por qué elegir AC Manager?',
-        costPrecisionTitle: 'Precisión de Costos',
-        costPrecisionDesc: 'Suma automáticamente los repuestos y mano de obra para evitar errores manuales de cálculo.',
-        taxCalcTitle: 'Cálculo de Impuestos',
-        taxCalcDesc: 'Aplica instantáneamente la tasa del IVA del 15% sobre el subtotal de los servicios.',
-        internalDatabaseTitle: 'Base de Datos Interna',
-        internalDatabaseDesc: 'Guarda y persiste los registros del historial mediante el uso inteligente de localStorage.',
-        usageGuideTitle: 'Guía de Uso Rápido',
-        guideStep1Title: 'Accede de forma segura',
-        guideStep1Desc: 'Inicia sesión para ingresar al panel exclusivo de técnicos y trabajar con datos protegidos.',
-        guideStep2Title: 'Ingresa los Datos',
-        guideStep2Desc: 'Escribe el nombre del cliente, dispositivo y costos del servicio técnico.',
-        guideStep3Title: 'Guarda e Historial',
-        guideStep3Desc: 'Visualiza el desglose en tiempo real y guarda la cotización en el historial persistente.',
-        featuresLabel: 'Funciones',
-        featuresHeader: 'Automatiza cada paso de tu flujo de trabajo',
-        feature1Title: 'Registro instantáneo',
-        feature1Desc: 'Guarda presupuestos y consulta el historial con un solo clic.',
-        feature2Title: 'Desglose claro',
-        feature2Desc: 'Visualiza subtotal, IVA y total de forma ordenada.',
-        feature3Title: 'Reportes rápidos',
-        feature3Desc: 'Genera cotizaciones con formato profesional para tus clientes.',
-        feature4Title: 'Control de acceso',
-        feature4Desc: 'La sesión y el historial quedan vinculados al técnico que ingresa.',
-        solutionsLabel: 'Soluciones',
-        solutionsHeader: 'Resuelve problemas reales de tu taller',
-        solutionsDescription: 'AC Manager centraliza tus presupuestos, evita cálculos manuales y reduce tiempos de respuesta al cliente.',
-        solutionItem1: 'Control de inventario básico y costos de repuestos.',
-        solutionItem2: 'Historial accesible para cada presupuesto guardado.',
-        solutionItem3: 'Interfaz clara para técnicos y gerentes.',
-        benefitsLabel: 'Beneficios',
-        benefitsHeader: 'Qué ganas al usar AC Manager',
-        benefit1Title: 'Más eficiencia',
-        benefit1Desc: 'Reduce el tiempo en formular una cotización y atiende más clientes por día.',
-        benefit2Title: 'Menos errores',
-        benefit2Desc: 'Los cálculos automáticos evitan fallos en impuestos y totales.',
-        benefit3Title: 'Mayor confianza',
-        benefit3Desc: 'Presenta presupuestos profesionales que generan seguridad en tus clientes.',
-        benefit4Title: 'Historial organizado',
-        benefit4Desc: 'Mantén todos tus trabajos guardados y listos para consulta futura.',
-        btnEnterAppText: 'Comenzar ahora',
-        authTabLogin: 'Iniciar Sesión',
-        authTabRegister: 'Crear Cuenta',
-        authTitleLogin: 'Bienvenido de Nuevo',
-        authSubtitleLogin: 'Ingresa tus credenciales para acceder a la calculadora.',
-        authTitleRegister: 'Crea tu Cuenta',
-        authSubtitleRegister: 'Regístrate como técnico autorizado de SoporteTec.',
-        authEmailLabel: 'Correo Electrónico',
-        authEmailPlaceholder: 'correo@ejemplo.com',
-        authEmailError: 'Escribe un correo electrónico válido',
-        authPasswordLabel: 'Contraseña',
-        authPasswordPlaceholder: '••••••••',
-        authPasswordError: 'La contraseña debe tener al menos 6 caracteres',
-        authConfirmPasswordLabel: 'Confirmar Contraseña',
-        authConfirmPasswordPlaceholder: '••••••••',
-        authConfirmPasswordError: 'Las contraseñas no coinciden',
-        btnForgotPassword: '¿Olvidaste tu contraseña?',
-        btnAuthSubmitLogin: 'Iniciar Sesión',
-        btnAuthSubmitRegister: 'Crear Cuenta',
-        btnBackToLandingText: 'Volver al Inicio',
-        btnBackToLandingTitle: 'Volver al Inicio',
-        btnLogoutText: 'Cerrar Sesión',
-        btnLogoutTitle: 'Cerrar Sesión',
-        landingTagline: 'Herramientas Profesionales de Gestión',
-        calculatorTagline: 'Calculadora de Presupuestos y Servicios Técnicos',
-        quoteFormTitle: 'Nueva Cotización',
-        clientNameLabel: 'Nombre del Cliente',
-        clientNamePlaceholder: 'Ej. Juan Pérez',
-        clientNameError: 'Este campo es obligatorio',
-        deviceModelLabel: 'Dispositivo / Equipo',
-        deviceModelPlaceholder: 'Buscar o seleccionar dispositivo...',
-        deviceInputNote: 'Escribe para filtrar laptops, computadoras, componentes y marcas como Asus, HP, Dell, Lenovo, MSI.',
-        deviceModelError: 'Este campo es obligatorio',
-        partsCostLabel: 'Costo Repuestos ($)',
-        partsCostPlaceholder: '0.00',
-        partsCostError: 'Mínimo 0',
-        laborCostLabel: 'Mano de Obra ($)',
-        laborCostPlaceholder: '0.00',
-        laborCostError: 'Mínimo 0',
-        btnCalculateText: 'Calcular y Guardar',
-        dbStatusLabel: 'Local DB',
-        livePreviewBadge: 'Vista Previa En Vivo',
-        breakdownTitle: 'Desglose del Presupuesto',
-        subtotalLabel: 'Subtotal (Repuestos + Mano de Obra)',
-        ivaLabel: 'IVA (15%)',
-        totalLabel: 'Total General',
-        chartTitle: 'Gráfico de costos',
-        partsLabel: 'Repuestos',
-        laborLabel: 'Mano de obra',
-        ivaChartLabel: 'IVA',
-        historyTitle: 'Historial de Cotizaciones',
-        searchHistoryPlaceholder: 'Buscar por cliente o equipo...',
-        historyEmptyText: 'No hay presupuestos registrados en el historial.',
-        btnClearHistoryText: 'Limpiar Todo el Historial',
-        footerLine1: '© 2026 AC Manager. Gestión profesional de presupuestos para servicios técnicos.',
-        footerLine2: 'Demostración funcional | Taller y proyecto técnico',
-        modalTitle: '¿Estás seguro de continuar?',
-        modalDescription: 'Esta acción eliminará de forma permanente todas las cotizaciones guardadas en el historial. Esta operación no se puede deshacer.',
-        modalBtnCancel: 'Cancelar',
-        modalBtnConfirm: 'Sí, borrar todo',
-        authFormInvalid: 'Por favor, corrige los errores en el formulario de acceso.',
-        firebaseLoginSuccess: 'Sesión iniciada con Firebase: {email}',
-        firebaseAccountCreated: 'Cuenta de Firebase creada: {email}',
-        simulatorEmailNotRegistered: 'El correo electrónico no está registrado en el simulador.',
-        simulatorWrongPassword: 'Contraseña incorrecta.',
-        simulatorLoginSuccess: 'Se inició correctamente.',
-        simulatorEmailAlreadyRegistered: 'Este correo electrónico ya está registrado.',
-        simulatorAccountCreated: 'Cuenta creada correctamente. Por favor, inicie sesión.',
-        passwordResetInvalidEmail: 'Por favor, ingresa un correo electrónico válido en el campo superior.',
-        passwordResetSentFirebase: 'Se ha enviado un correo real de restablecimiento de contraseña a: {email}. Revisa tu bandeja de entrada.',
-        passwordResetSentSimulator: '[SIMULACIÓN] Correo enviado con éxito a: {email}. En un entorno real con Firebase, el método \"sendPasswordResetEmail\" enviaría un enlace de recuperación.',
-        firebaseSessionClosed: 'Sesión de Firebase cerrada.',
-        localSessionClosed: 'Sesión local finalizada.',
-        quoteSaved: 'Presupuesto para {clientName} guardado.',
-        quoteDeleted: 'Presupuesto de {clientName} eliminado.',
-        historyCleared: 'El historial del técnico ha sido vaciado.',
-        historyNoResults: 'No se encontraron resultados para "{query}".',
-        firebaseErrorInvalidEmail: 'Formato de correo electrónico inválido.',
-        firebaseErrorUserDisabled: 'Esta cuenta ha sido inhabilitada.',
-        firebaseErrorUserNotFound: 'No existe ningún usuario registrado con este correo.',
-        firebaseErrorWrongPassword: 'Contraseña incorrecta.',
-        firebaseErrorEmailAlreadyInUse: 'Este correo ya está asociado a otra cuenta.',
-        firebaseErrorWeakPassword: 'La contraseña debe tener mínimo 6 caracteres.',
-        firebaseErrorDefault: 'Ocurrió un error en el servidor de autenticación.',
-        formIncompleteBudget: 'Por favor, completa los campos del presupuesto.',
-        recordsBadge: '{count} cotizaciones',
-        deleteRowTitle: 'Eliminar este presupuesto',
-        deviceNoResults: 'No se encontraron dispositivos',
-        deviceSelectTitle: 'Seleccionar {device}',
-        fullIdTitle: 'ID completo: {id}',
-        dbStatusFirebase: 'Firebase Cloud',
-        dbStatusLocal: 'BD Local',
-        languageChanged: 'Idioma cambiado a {lang}.',
-    },
-    en: {
-        languageName: 'English',
-        pageTitle: 'AC Manager - Professional Quotation Manager',
-        metaDescription: 'Quotation manager for technical workshops: quote, save and review service budgets with a professional interface.',
-        navFeatures: 'Features',
-        navSolutions: 'Solutions',
-        navBenefits: 'Benefits',
-        heroBadge: 'Professional Technical Solution',
-        heroTitle: 'Manage quotes with accuracy and corporate design',
-        heroDescription: 'AC Manager is a tool designed for technical workshops that need to quote services, control parts costs, and keep an organized history that is easy to consult.',
-        whyTitle: 'Why choose AC Manager?',
-        costPrecisionTitle: 'Cost Accuracy',
-        costPrecisionDesc: 'Automatically adds parts and labor to prevent manual calculation errors.',
-        taxCalcTitle: 'Tax Calculation',
-        taxCalcDesc: 'Instantly applies the 15% VAT rate on the service subtotal.',
-        internalDatabaseTitle: 'Internal Database',
-        internalDatabaseDesc: 'Saves and persists history records using localStorage intelligently.',
-        usageGuideTitle: 'Quick Start Guide',
-        guideStep1Title: 'Sign in securely',
-        guideStep1Desc: 'Log in to access the technician-only panel and work with protected data.',
-        guideStep2Title: 'Enter the Data',
-        guideStep2Desc: 'Type the client name, device and service costs.',
-        guideStep3Title: 'Save and History',
-        guideStep3Desc: 'See the breakdown in real time and save the quote to persistent history.',
-        featuresLabel: 'Features',
-        featuresHeader: 'Automate every step of your workflow',
-        feature1Title: 'Instant record',
-        feature1Desc: 'Save quotes and check history with a single click.',
-        feature2Title: 'Clear breakdown',
-        feature2Desc: 'View subtotal, VAT and total in an organized way.',
-        feature3Title: 'Fast reports',
-        feature3Desc: 'Generate professional-looking quotes for your clients.',
-        feature4Title: 'Access control',
-        feature4Desc: 'Session and history are linked to the technician who logs in.',
-        solutionsLabel: 'Solutions',
-        solutionsHeader: 'Solve real problems in your workshop',
-        solutionsDescription: 'AC Manager centralizes your quotes, avoids manual calculations and reduces customer response times.',
-        solutionItem1: 'Basic inventory control and parts cost tracking.',
-        solutionItem2: 'Accessible history for every saved quote.',
-        solutionItem3: 'Clear interface for technicians and managers.',
-        benefitsLabel: 'Benefits',
-        benefitsHeader: 'What you gain by using AC Manager',
-        benefit1Title: 'More efficiency',
-        benefit1Desc: 'Reduce the time needed to create a quote and serve more customers per day.',
-        benefit2Title: 'Fewer errors',
-        benefit2Desc: 'Automatic calculations prevent mistakes in taxes and totals.',
-        benefit3Title: 'More confidence',
-        benefit3Desc: 'Present professional quotes that build customer trust.',
-        benefit4Title: 'Organized history',
-        benefit4Desc: 'Keep all your jobs saved and ready for future review.',
-        btnEnterAppText: 'Start now',
-        authTabLogin: 'Log In',
-        authTabRegister: 'Sign Up',
-        authTitleLogin: 'Welcome Back',
-        authSubtitleLogin: 'Enter your credentials to access the calculator.',
-        authTitleRegister: 'Create Your Account',
-        authSubtitleRegister: 'Register as an authorized SuporteTec technician.',
-        authEmailLabel: 'Email Address',
-        authEmailPlaceholder: 'email@example.com',
-        authEmailError: 'Enter a valid email address',
-        authPasswordLabel: 'Password',
-        authPasswordPlaceholder: '••••••••',
-        authPasswordError: 'Password must be at least 6 characters',
-        authConfirmPasswordLabel: 'Confirm Password',
-        authConfirmPasswordPlaceholder: '••••••••',
-        authConfirmPasswordError: 'Passwords do not match',
-        btnForgotPassword: 'Forgot your password?',
-        btnAuthSubmitLogin: 'Log In',
-        btnAuthSubmitRegister: 'Sign Up',
-        btnBackToLandingText: 'Back to Home',
-        btnBackToLandingTitle: 'Back to Home',
-        btnLogoutText: 'Log Out',
-        btnLogoutTitle: 'Log Out',
-        landingTagline: 'Professional Management Tools',
-        calculatorTagline: 'Budget and Service Calculator',
-        quoteFormTitle: 'New Quote',
-        clientNameLabel: 'Client Name',
-        clientNamePlaceholder: 'Ex. John Doe',
-        clientNameError: 'This field is required',
-        deviceModelLabel: 'Device / Equipment',
-        deviceModelPlaceholder: 'Search or select a device...',
-        deviceInputNote: 'Type to filter laptops, computers, components and brands like Asus, HP, Dell, Lenovo, MSI.',
-        deviceModelError: 'This field is required',
-        partsCostLabel: 'Parts Cost ($)',
-        partsCostPlaceholder: '0.00',
-        partsCostError: 'Minimum 0',
-        laborCostLabel: 'Labor Cost ($)',
-        laborCostPlaceholder: '0.00',
-        laborCostError: 'Minimum 0',
-        btnCalculateText: 'Calculate and Save',
-        dbStatusLabel: 'Local DB',
-        livePreviewBadge: 'Live Preview',
-        breakdownTitle: 'Budget Breakdown',
-        subtotalLabel: 'Subtotal (Parts + Labor)',
-        ivaLabel: 'VAT (15%)',
-        totalLabel: 'Total Amount',
-        chartTitle: 'Cost chart',
-        partsLabel: 'Parts',
-        laborLabel: 'Labor',
-        ivaChartLabel: 'VAT',
-        historyTitle: 'Quotes History',
-        searchHistoryPlaceholder: 'Search by client or device...',
-        historyEmptyText: 'No quotes recorded in history.',
-        btnClearHistoryText: 'Clear Full History',
-        footerLine1: '© 2026 AC Manager. Professional budget management for technical services.',
-        footerLine2: 'Working demo | Workshop and technical project',
-        modalTitle: 'Are you sure you want to continue?',
-        modalDescription: 'This action will permanently remove all saved quotes from history. This operation cannot be undone.',
-        modalBtnCancel: 'Cancel',
-        modalBtnConfirm: 'Yes, delete all',
-        authFormInvalid: 'Please fix the errors in the login form.',
-        firebaseLoginSuccess: 'Logged in with Firebase: {email}',
-        firebaseAccountCreated: 'Firebase account created: {email}',
-        simulatorEmailNotRegistered: 'The email address is not registered in the simulator.',
-        simulatorWrongPassword: 'Incorrect password.',
-        simulatorLoginSuccess: 'Logged in successfully.',
-        simulatorEmailAlreadyRegistered: 'This email address is already registered.',
-        simulatorAccountCreated: 'Account created successfully. Please log in.',
-        passwordResetInvalidEmail: 'Please enter a valid email address in the top field.',
-        passwordResetSentFirebase: 'A real password reset email has been sent to: {email}. Check your inbox.',
-        passwordResetSentSimulator: '[SIMULATION] Email successfully sent to: {email}. In a real Firebase setup, sendPasswordResetEmail would send a recovery link.',
-        firebaseSessionClosed: 'Firebase session closed.',
-        localSessionClosed: 'Local session ended.',
-        quoteSaved: 'Quote for {clientName} saved.',
-        quoteDeleted: 'Quote for {clientName} deleted.',
-        historyCleared: 'Technician history has been cleared.',
-        historyNoResults: 'No results found for "{query}".',
-        firebaseErrorInvalidEmail: 'Invalid email format.',
-        firebaseErrorUserDisabled: 'This account has been disabled.',
-        firebaseErrorUserNotFound: 'No registered user found with that email.',
-        firebaseErrorWrongPassword: 'Incorrect password.',
-        firebaseErrorEmailAlreadyInUse: 'This email is already associated with another account.',
-        firebaseErrorWeakPassword: 'Password must be at least 6 characters.',
-        firebaseErrorDefault: 'An authentication server error occurred.',
-        formIncompleteBudget: 'Please complete the quote fields.',
-        recordsBadge: '{count} quotes',
-        deleteRowTitle: 'Delete this quote',
-        deviceNoResults: 'No devices found',
-        deviceSelectTitle: 'Select {device}',
-        fullIdTitle: 'Full ID: {id}',
-        dbStatusFirebase: 'Firebase Cloud',
-        dbStatusLocal: 'Local DB',
-        languageChanged: 'Language changed to {lang}.',
-    },
-    pt: {
-        languageName: 'Português',
-        pageTitle: 'AC Manager - Gerenciador Profissional de Orçamentos',
-        metaDescription: 'Gerenciador de orçamentos para oficinas técnicas: orce, salve e consulte serviços com uma interface profissional.',
-        navFeatures: 'Funcionalidades',
-        navSolutions: 'Soluções',
-        navBenefits: 'Benefícios',
-        heroBadge: 'Solução Técnica Profissional',
-        heroTitle: 'Gerencie orçamentos com precisão e design corporativo',
-        heroDescription: 'O AC Manager é uma ferramenta para oficinas técnicas que precisam orçar serviços, controlar custos de peças e manter um histórico organizado e fácil de consultar.',
-        whyTitle: 'Por que escolher o AC Manager?',
-        costPrecisionTitle: 'Precisão de Custos',
-        costPrecisionDesc: 'Soma automaticamente peças e mão de obra para evitar erros manuais de cálculo.',
-        taxCalcTitle: 'Cálculo de Impostos',
-        taxCalcDesc: 'Aplica instantaneamente a taxa de IVA de 15% sobre o subtotal dos serviços.',
-        internalDatabaseTitle: 'Banco de Dados Interno',
-        internalDatabaseDesc: 'Salva e persiste os registros do histórico usando localStorage de forma inteligente.',
-        usageGuideTitle: 'Guia de Uso Rápido',
-        guideStep1Title: 'Acesse com segurança',
-        guideStep1Desc: 'Faça login para acessar o painel exclusivo para técnicos e trabalhar com dados protegidos.',
-        guideStep2Title: 'Insira os Dados',
-        guideStep2Desc: 'Digite o nome do cliente, dispositivo e custos do serviço técnico.',
-        guideStep3Title: 'Salve e Histórico',
-        guideStep3Desc: 'Veja o detalhamento em tempo real e salve o orçamento no histórico persistente.',
-        featuresLabel: 'Funcionalidades',
-        featuresHeader: 'Automatize cada etapa do seu fluxo de trabalho',
-        feature1Title: 'Registro instantâneo',
-        feature1Desc: 'Salve orçamentos e consulte o histórico com um único clique.',
-        feature2Title: 'Detalhamento claro',
-        feature2Desc: 'Visualize subtotal, IVA e total de forma organizada.',
-        feature3Title: 'Relatórios rápidos',
-        feature3Desc: 'Gere orçamentos com layout profissional para seus clientes.',
-        feature4Title: 'Controle de acesso',
-        feature4Desc: 'Sessão e histórico ficam vinculados ao técnico que entra.',
-        solutionsLabel: 'Soluções',
-        solutionsHeader: 'Resolva problemas reais da sua oficina',
-        solutionsDescription: 'O AC Manager centraliza seus orçamentos, evita cálculos manuais e reduz o tempo de resposta ao cliente.',
-        solutionItem1: 'Controle básico de estoque e custos de peças.',
-        solutionItem2: 'Histórico acessível para cada orçamento salvo.',
-        solutionItem3: 'Interface clara para técnicos e gerentes.',
-        benefitsLabel: 'Benefícios',
-        benefitsHeader: 'O que você ganha usando o AC Manager',
-        benefit1Title: 'Mais eficiência',
-        benefit1Desc: 'Reduza o tempo para elaborar um orçamento e atenda mais clientes por dia.',
-        benefit2Title: 'Menos erros',
-        benefit2Desc: 'Cálculos automáticos evitam falhas em impostos e totais.',
-        benefit3Title: 'Mais confiança',
-        benefit3Desc: 'Apresente orçamentos profissionais que inspiram confiança aos clientes.',
-        benefit4Title: 'Histórico organizado',
-        benefit4Desc: 'Mantenha todos os seus trabalhos salvos e prontos para consulta futura.',
-        btnEnterAppText: 'Começar agora',
-        authTabLogin: 'Entrar',
-        authTabRegister: 'Criar Conta',
-        authTitleLogin: 'Bem-vindo de volta',
-        authSubtitleLogin: 'Digite suas credenciais para acessar a calculadora.',
-        authTitleRegister: 'Crie sua conta',
-        authSubtitleRegister: 'Cadastre-se como técnico autorizado do SuporteTec.',
-        authEmailLabel: 'E-mail',
-        authEmailPlaceholder: 'email@exemplo.com',
-        authEmailError: 'Digite um e-mail válido',
-        authPasswordLabel: 'Senha',
-        authPasswordPlaceholder: '••••••••',
-        authPasswordError: 'A senha deve ter pelo menos 6 caracteres',
-        authConfirmPasswordLabel: 'Confirmar Senha',
-        authConfirmPasswordPlaceholder: '••••••••',
-        authConfirmPasswordError: 'As senhas não coincidem',
-        btnForgotPassword: 'Esqueceu sua senha?',
-        btnAuthSubmitLogin: 'Entrar',
-        btnAuthSubmitRegister: 'Criar Conta',
-        btnBackToLandingText: 'Voltar ao Início',
-        btnBackToLandingTitle: 'Voltar ao Início',
-        btnLogoutText: 'Sair',
-        btnLogoutTitle: 'Sair',
-        landingTagline: 'Ferramentas Profissionais de Gestão',
-        calculatorTagline: 'Calculadora de Orçamentos e Serviços Técnicos',
-        quoteFormTitle: 'Novo Orçamento',
-        clientNameLabel: 'Nome do Cliente',
-        clientNamePlaceholder: 'Ex. João Silva',
-        clientNameError: 'Este campo é obrigatório',
-        deviceModelLabel: 'Dispositivo / Equipamento',
-        deviceModelPlaceholder: 'Buscar ou selecionar dispositivo...',
-        deviceInputNote: 'Digite para filtrar laptops, computadores, componentes e marcas como Asus, HP, Dell, Lenovo, MSI.',
-        deviceModelError: 'Este campo é obrigatório',
-        partsCostLabel: 'Custo de Peças ($)',
-        partsCostPlaceholder: '0,00',
-        partsCostError: 'Mínimo 0',
-        laborCostLabel: 'Mão de Obra ($)',
-        laborCostPlaceholder: '0,00',
-        laborCostError: 'Mínimo 0',
-        btnCalculateText: 'Calcular e Salvar',
-        dbStatusLabel: 'BD Local',
-        livePreviewBadge: 'Prévia ao Vivo',
-        breakdownTitle: 'Detalhamento do Orçamento',
-        subtotalLabel: 'Subtotal (Peças + Mão de Obra)',
-        ivaLabel: 'IVA (15%)',
-        totalLabel: 'Total Geral',
-        chartTitle: 'Gráfico de custos',
-        partsLabel: 'Peças',
-        laborLabel: 'Mão de obra',
-        ivaChartLabel: 'IVA',
-        historyTitle: 'Histórico de Orçamentos',
-        searchHistoryPlaceholder: 'Buscar por cliente ou equipamento...',
-        historyEmptyText: 'Não há orçamentos registrados no histórico.',
-        btnClearHistoryText: 'Limpar Todo o Histórico',
-        footerLine1: '© 2026 AC Manager. Gestão profissional de orçamentos para serviços técnicos.',
-        footerLine2: 'Demonstração funcional | Oficina e projeto técnico',
-        modalTitle: 'Tem certeza de que deseja continuar?',
-        modalDescription: 'Esta ação excluirá permanentemente todos os orçamentos salvos no histórico. Esta operação não pode ser desfeita.',
-        modalBtnCancel: 'Cancelar',
-        modalBtnConfirm: 'Sim, apagar tudo',
-        authFormInvalid: 'Por favor, corrija os erros no formulário de acesso.',
-        firebaseLoginSuccess: 'Sessão iniciada no Firebase: {email}',
-        firebaseAccountCreated: 'Conta do Firebase criada: {email}',
-        simulatorEmailNotRegistered: 'O e-mail não está registrado no simulador.',
-        simulatorWrongPassword: 'Senha incorreta.',
-        simulatorLoginSuccess: 'Entrou com sucesso.',
-        simulatorEmailAlreadyRegistered: 'Este e-mail já está registrado.',
-        simulatorAccountCreated: 'Conta criada com sucesso. Por favor, faça login.',
-        passwordResetInvalidEmail: 'Por favor, insira um e-mail válido no campo acima.',
-        passwordResetSentFirebase: 'Um e-mail real de redefinição de senha foi enviado para: {email}. Verifique sua caixa de entrada.',
-        passwordResetSentSimulator: '[SIMULAÇÃO] E-mail enviado com sucesso para: {email}. Em um ambiente real com Firebase, o método sendPasswordResetEmail enviaria um link de recuperação.',
-        firebaseSessionClosed: 'Sessão do Firebase encerrada.',
-        localSessionClosed: 'Sessão local finalizada.',
-        quoteSaved: 'Orçamento para {clientName} salvo.',
-        quoteDeleted: 'Orçamento de {clientName} excluído.',
-        historyCleared: 'O histórico do técnico foi limpo.',
-        historyNoResults: 'Não foram encontrados resultados para "{query}".',
-        firebaseErrorInvalidEmail: 'Formato de e-mail inválido.',
-        firebaseErrorUserDisabled: 'Esta conta foi desativada.',
-        firebaseErrorUserNotFound: 'Nenhum usuário registrado com este e-mail.',
-        firebaseErrorWrongPassword: 'Senha incorreta.',
-        firebaseErrorEmailAlreadyInUse: 'Este e-mail já está associado a outra conta.',
-        firebaseErrorWeakPassword: 'A senha deve ter pelo menos 6 caracteres.',
-        firebaseErrorDefault: 'Ocorreu um erro no servidor de autenticação.',
-        formIncompleteBudget: 'Por favor, complete os campos do orçamento.',
-        recordsBadge: '{count} orçamentos',
-        deleteRowTitle: 'Excluir este orçamento',
-        deviceNoResults: 'Nenhum dispositivo encontrado',
-        deviceSelectTitle: 'Selecionar {device}',
-        fullIdTitle: 'ID completo: {id}',
-        dbStatusFirebase: 'Firebase Cloud',
-        dbStatusLocal: 'BD Local',
-        languageChanged: 'Idioma alterado para {lang}.',
-    }
-};
+async function insertToSupabase(payload){ try{ const { data, error } = await supabase.from('presupuestos').insert([payload]).select(); if(error) return { success:false, error }; if(data && data.length>0) return { success:true, row:data[0] }; return { success:false, error:new Error('No data') }; }catch(e){ return { success:false, error:e }; } }
 
-function t(key) {
-    return TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key] ? TRANSLATIONS[currentLanguage][key] : '';
-}
+async function handleBudgetFormSubmit(e){ if(e && e.preventDefault) e.preventDefault(); const clientName = inputClientName?inputClientName.value.trim():''; const deviceModel = inputDeviceModel?inputDeviceModel.value.trim():''; const partsCost = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const laborCost = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const email = inputEmail?inputEmail.value.trim():'desconocido@local'; if(!clientName||!deviceModel){ showToast('Cliente y dispositivo son requeridos'); return; } const {subtotal, iva, total} = calculateAmounts(partsCost, laborCost); const fecha_creacion = new Date().toISOString(); const payload = { cliente: clientName, dispositivo: deviceModel, repuestos: partsCost, mano_obra: laborCost, iva, total, email, fecha_creacion }; showToast('Enviando a Supabase...'); const res = await insertToSupabase(payload); if(res.success && res.row){ const row = res.row; const record = { id: row.id || Date.now(), clientName: row.cliente || clientName, deviceModel: row.dispositivo || deviceModel, partsCost: row.repuestos ?? partsCost, laborCost: row.mano_obra ?? laborCost, subtotal: row.iva ? +( (row.total || total) - (row.iva || iva) ).toFixed(2) : subtotal, iva: row.iva ?? iva, total: row.total ?? total, date: row.fecha_creacion? new Date(row.fecha_creacion).toLocaleString('es-ES') : getCurrentFormattedDate(), email: row.email || email }; budgetList.push(record); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('Presupuesto guardado en Supabase'); return; } const fallback = { id: Date.now(), clientName, deviceModel, partsCost, laborCost, subtotal, iva, total, date: getCurrentFormattedDate(), email }; budgetList.push(fallback); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('No se pudo guardar en la nube; guardado local'); }
 
-function translateMessage(key, params = {}) {
-    const template = t(key);
-    return template.replace(/\{(\w+)\}/g, (_, paramName) => params[paramName] != null ? params[paramName] : '');
-}
+function init(){ loadLocalMirror(); renderHistory(); if(budgetForm) budgetForm.addEventListener('submit', handleBudgetFormSubmit); if(searchHistory) searchHistory.addEventListener('input', e=>renderHistory(e.target.value)); if(btnClearHistory) btnClearHistory.addEventListener('click', ()=>{ budgetList=[]; saveLocalMirror(); renderHistory(); showToast('Historial limpiado'); }); if(inputPartsCost||inputLaborCost){ const updatePreview = ()=>{ const p = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const l = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const {subtotal, iva, total} = calculateAmounts(p,l); if(lblSubtotal) lblSubtotal.textContent = formatCurrency(subtotal); if(lblIva) lblIva.textContent = formatCurrency(iva); if(lblTotal) lblTotal.textContent = formatCurrency(total); }; if(inputPartsCost) inputPartsCost.addEventListener('input', updatePreview); if(inputLaborCost) inputLaborCost.addEventListener('input', updatePreview); } }
 
-function translatePage(lang) {
-    if (!TRANSLATIONS[lang]) {
-        lang = 'es';
-    }
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    currentLanguage = lang;
-    document.documentElement.lang = lang;
-    document.title = TRANSLATIONS[lang].pageTitle;
+const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable__qQmLTITfpuVePH67M2dCw_CF8kmosN";
 
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-        metaDescription.setAttribute('content', TRANSLATIONS[lang].metaDescription);
-    }
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    document.querySelectorAll('[data-i18n]').forEach((element) => {
-        const key = element.dataset.i18n;
-        if (key && TRANSLATIONS[lang][key] != null) {
-            element.textContent = TRANSLATIONS[lang][key];
-        }
-    });
+// app.js - Conexión directa a Supabase y calculadora
 
-    document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
-        const key = element.dataset.i18nPlaceholder;
-        if (key && TRANSLATIONS[lang][key] != null) {
-            element.placeholder = TRANSLATIONS[lang][key];
-        }
-    });
-
-    document.querySelectorAll('[data-i18n-title]').forEach((element) => {
-        const key = element.dataset.i18nTitle;
-        if (key && TRANSLATIONS[lang][key] != null) {
-            element.title = TRANSLATIONS[lang][key];
-        }
-    });
-
-    if (selectedLanguage) {
-        selectedLanguage.textContent = TRANSLATIONS[lang].languageName;
-    }
-
-    languageOptionButtons.forEach((option) => {
-        if (option.dataset.lang === lang) {
-            option.classList.add('active');
-        } else {
-            option.classList.remove('active');
-        }
-    });
-
-    setAuthMode(authMode);
-}
-
-function getCurrentLanguageLabel() {
-    return TRANSLATIONS[currentLanguage] ? TRANSLATIONS[currentLanguage].languageName : 'Español';
-}
-
-function initLanguageSwitcher() {
-    if (!languageToggle || !languageOptions || !selectedLanguage) return;
-
-    const closeLanguageMenu = () => {
-        languageOptions.classList.add('hidden');
-        languageToggle.setAttribute('aria-expanded', 'false');
-    };
-
-    languageToggle.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const isOpen = !languageOptions.classList.contains('hidden');
-        if (isOpen) {
-            closeLanguageMenu();
-        } else {
-            languageOptions.classList.remove('hidden');
-            languageToggle.setAttribute('aria-expanded', 'true');
-        }
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!languageToggle.contains(event.target) && !languageOptions.contains(event.target)) {
-            closeLanguageMenu();
-        }
-    });
-
-    languageOptionButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const lang = button.dataset.lang;
-            if (!TRANSLATIONS[lang]) return;
-
-            translatePage(lang);
-            localStorage.setItem('acManagerLanguage', lang);
-            closeLanguageMenu();
-
-            if (typeof showToast === 'function') {
-                const message = TRANSLATIONS[lang].languageChanged.replace('{lang}', TRANSLATIONS[lang].languageName);
-                showToast(message, 'success');
-            }
-        });
-    });
-}
-
-// ==========================================================================
-// 3. ESTADOS Y ALMACENAMIENTO DE LA APP
-// ==========================================================================
 let budgetList = [];
-let currentUser = null; // Almacenará el usuario logueado actualmente
-let authMode = 'login'; // Puede ser 'login' o 'register'
 
-// Claves únicas de LocalStorage
-const STORAGE_BUDGET_KEY = 'soporteTec_presupuestos';
-const STORAGE_USERS_KEY = 'soporteTec_usuarios_simulados'; // BD de usuarios simulada
-const STORAGE_SESSION_KEY = 'soporteTec_sesion_activa';  // Persistencia de sesión simulada
+function formatCurrency(v){ return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(v); }
+function getCurrentFormattedDate(){ return new Date().toLocaleString('es-ES'); }
+function showToast(msg){ console.log('[AriManager]', msg); }
+function escapeHTML(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-// ==========================================================================
-// 4. SISTEMA DE ENRUTAMIENTO Y TRANSICIÓN DE PANTALLAS
-// ==========================================================================
+// Selectores esperados en tu HTML
+const budgetForm = document.getElementById('budgetForm');
+const inputClientName = document.getElementById('clientName');
+const inputDeviceModel = document.getElementById('deviceModel');
+const inputPartsCost = document.getElementById('partsCost');
+const inputLaborCost = document.getElementById('laborCost');
+const inputEmail = document.getElementById('email');
+const bodyHistory = document.getElementById('bodyHistory');
+const searchHistory = document.getElementById('searchHistory');
+const recordsBadge = document.getElementById('recordsBadge');
+const btnClearHistory = document.getElementById('btnClearHistory');
+const lblSubtotal = document.getElementById('lblSubtotal');
+const lblIva = document.getElementById('lblIva');
+const lblTotal = document.getElementById('lblTotal');
 
-/**
- * Alterna la visibilidad de las secciones añadiendo/quitando la clase '.hidden'
- * @param {string} sectionToShow - ID de la sección que se desea activar
- */
-function navigateTo(sectionToShow) {
-    // Lista de todas las vistas principales
-    const sections = [landingSection, authSection, calculatorSection];
-    
-    sections.forEach(section => {
-        if (section.id === sectionToShow) {
-            section.classList.remove('hidden');
-        } else {
-            section.classList.add('hidden');
-        }
-    });
+function calculateAmounts(parts, labor){ const p = Number(parts)||0; const l = Number(labor)||0; const subtotal = +(p + l).toFixed(2); const iva = +((subtotal * 0.15)).toFixed(2); const total = +(subtotal + iva).toFixed(2); return {subtotal, iva, total}; }
+
+function renderHistory(filter=''){ if(!bodyHistory) return; bodyHistory.innerHTML=''; const q=(filter||'').toLowerCase().trim(); const items = budgetList.filter(b=> (b.clientName||'').toLowerCase().includes(q) || (b.deviceModel||'').toLowerCase().includes(q) ); if(recordsBadge) recordsBadge.textContent = `${budgetList.length} registros`; if(items.length===0){ bodyHistory.innerHTML = '<tr><td colspan="6">No hay registros</td></tr>'; return; } items.slice().reverse().forEach(it=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>#${String(it.id).slice(-6)}</td><td>${escapeHTML(it.clientName)}</td><td>${escapeHTML(it.deviceModel)}</td><td>${formatCurrency(it.total)}</td><td>${it.date}</td><td><button class="btn-delete" data-id="${it.id}">Borrar</button></td>`; bodyHistory.appendChild(tr); }); bodyHistory.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click', ()=>{ const id = btn.getAttribute('data-id'); budgetList = budgetList.filter(b=>String(b.id)!==String(id)); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); showToast('Registro eliminado'); })); }
+
+const STORAGE_KEY = 'ari_manager_local_mirror';
+function loadLocalMirror(){ try{ const raw = localStorage.getItem(STORAGE_KEY); budgetList = raw?JSON.parse(raw):[]; }catch(e){ budgetList = []; } }
+function saveLocalMirror(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetList)); }catch(e){ console.warn(e); } }
+
+async function insertToSupabase(payload){ try{ const { data, error } = await supabase.from('presupuestos').insert([payload]).select(); if(error) return { success:false, error }; if(data && data.length>0) return { success:true, row:data[0] }; return { success:false, error:new Error('No data') }; }catch(e){ return { success:false, error:e }; } }
+
+async function handleBudgetFormSubmit(e){ if(e && e.preventDefault) e.preventDefault(); const clientName = inputClientName?inputClientName.value.trim():''; const deviceModel = inputDeviceModel?inputDeviceModel.value.trim():''; const partsCost = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const laborCost = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const email = inputEmail?inputEmail.value.trim():'desconocido@local'; if(!clientName||!deviceModel){ showToast('Cliente y dispositivo son requeridos'); return; } const {subtotal, iva, total} = calculateAmounts(partsCost, laborCost); const fecha_creacion = new Date().toISOString(); const payload = { cliente: clientName, dispositivo: deviceModel, repuestos: partsCost, mano_obra: laborCost, iva, total, email, fecha_creacion }; showToast('Enviando a Supabase...'); const res = await insertToSupabase(payload); if(res.success && res.row){ const row = res.row; const record = { id: row.id || Date.now(), clientName: row.cliente || clientName, deviceModel: row.dispositivo || deviceModel, partsCost: row.repuestos ?? partsCost, laborCost: row.mano_obra ?? laborCost, subtotal: row.iva ? +( (row.total || total) - (row.iva || iva) ).toFixed(2) : subtotal, iva: row.iva ?? iva, total: row.total ?? total, date: row.fecha_creacion? new Date(row.fecha_creacion).toLocaleString('es-ES') : getCurrentFormattedDate(), email: row.email || email }; budgetList.push(record); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('Presupuesto guardado en Supabase'); return; } const fallback = { id: Date.now(), clientName, deviceModel, partsCost, laborCost, subtotal, iva, total, date: getCurrentFormattedDate(), email }; budgetList.push(fallback); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('No se pudo guardar en la nube; guardado local'); }
+
+function init(){ loadLocalMirror(); renderHistory(); if(budgetForm) budgetForm.addEventListener('submit', handleBudgetFormSubmit); if(searchHistory) searchHistory.addEventListener('input', e=>renderHistory(e.target.value)); if(btnClearHistory) btnClearHistory.addEventListener('click', ()=>{ budgetList=[]; saveLocalMirror(); renderHistory(); showToast('Historial limpiado'); }); if(inputPartsCost||inputLaborCost){ const updatePreview = ()=>{ const p = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const l = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const {subtotal, iva, total} = calculateAmounts(p,l); if(lblSubtotal) lblSubtotal.textContent = formatCurrency(subtotal); if(lblIva) lblIva.textContent = formatCurrency(iva); if(lblTotal) lblTotal.textContent = formatCurrency(total); }; if(inputPartsCost) inputPartsCost.addEventListener('input', updatePreview); if(inputLaborCost) inputLaborCost.addEventListener('input', updatePreview); } }
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable__qQmLTITfpuVePH67M2dCw_CF8kmosN";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Ari Manager - app.js
+// Conexión directa a Supabase y lógica de la calculadora
+
+let budgetList = [];
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 }
+function getCurrentFormattedDate() { return new Date().toLocaleString('es-ES'); }
+function showToast(msg, type='info'){ console.log('[Toast]', type, msg); }
+function escapeHTML(s){ if(!s) return ''; return String(s).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c])); }
 
-// Vinculación de eventos de botones de navegación
-if (btnEnterApp) {
-    btnEnterApp.addEventListener('click', () => {
-        showLoader(500);
-        setTimeout(() => navigateTo('authSection'), 200);
-    });
-}
+// DOM selectors (IDs expected in your HTML)
+const landingSection = document.getElementById('landingSection');
+const authSection = document.getElementById('authSection');
+const calculatorSection = document.getElementById('calculatorSection');
+const btnEnterApp = document.getElementById('btnEnterApp');
+const btnBackToLanding = document.getElementById('btnBackToLanding');
+const btnLogout = document.getElementById('btnLogout');
+const budgetForm = document.getElementById('budgetForm');
+const inputClientName = document.getElementById('clientName');
+const inputDeviceModel = document.getElementById('deviceModel');
+const inputPartsCost = document.getElementById('partsCost');
+const inputLaborCost = document.getElementById('laborCost');
+const inputEmail = document.getElementById('email');
+const bodyHistory = document.getElementById('bodyHistory');
+const searchHistory = document.getElementById('searchHistory');
+const recordsBadge = document.getElementById('recordsBadge');
+const btnClearHistory = document.getElementById('btnClearHistory');
+const lblSubtotal = document.getElementById('lblSubtotal');
+const lblIva = document.getElementById('lblIva');
+const lblTotal = document.getElementById('lblTotal');
 
-if (btnBackToLanding) {
-    btnBackToLanding.addEventListener('click', () => {
-        showLoader(500);
-        setTimeout(() => navigateTo('landingSection'), 200);
-    });
-}
+function navigateTo(sectionId){ [landingSection, authSection, calculatorSection].forEach(s => { if(!s) return; if(s.id===sectionId) s.classList.remove('hidden'); else s.classList.add('hidden'); }); }
+if(btnEnterApp) btnEnterApp.addEventListener('click', ()=>navigateTo('authSection'));
+if(btnBackToLanding) btnBackToLanding.addEventListener('click', ()=>navigateTo('landingSection'));
+if(btnLogout) btnLogout.addEventListener('click', ()=>navigateTo('landingSection'));
 
-function showLoader(duration = 500) {
-    if (!pageLoader) return;
-    clearTimeout(loaderTimeoutId);
-    pageLoader.classList.remove('hidden');
-    loaderTimeoutId = setTimeout(() => {
-        hideLoader();
-    }, duration);
-}
+function calculateAmounts(parts, labor){ const p=Number(parts)||0; const l=Number(labor)||0; const subtotal=+(p+l).toFixed(2); const iva=+((subtotal*0.15)).toFixed(2); const total=+(subtotal+iva).toFixed(2); return {subtotal,iva,total}; }
 
-function hideLoader() {
-    if (!pageLoader) return;
-    clearTimeout(loaderTimeoutId);
-    pageLoader.classList.add('hidden');
-}
+function renderHistory(filter=''){ if(!bodyHistory) return; bodyHistory.innerHTML=''; const q=(filter||'').toLowerCase().trim(); const items=budgetList.filter(b=> (b.clientName||'').toLowerCase().includes(q) || (b.deviceModel||'').toLowerCase().includes(q) || String(b.id).includes(q)); if(recordsBadge) recordsBadge.textContent=`${budgetList.length} registros`; if(items.length===0){ bodyHistory.innerHTML='<tr><td colspan="6">No hay registros</td></tr>'; return; } items.slice().reverse().forEach(it=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>#${String(it.id).slice(-6)}</td><td>${escapeHTML(it.clientName)}</td><td>${escapeHTML(it.deviceModel)}</td><td>${formatCurrency(it.total)}</td><td>${it.date}</td><td><button class="btn-delete" data-id="${it.id}">Borrar</button></td>`; bodyHistory.appendChild(tr); }); bodyHistory.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click',()=>{ const id=parseInt(btn.getAttribute('data-id')); budgetList=budgetList.filter(b=>b.id!==id); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); showToast('Registro eliminado','info'); })); }
 
-function initSectionLoaderLinks() {
-    document.querySelectorAll('.landing-nav a[href^="#"]').forEach((link) => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            const targetSection = document.querySelector(link.getAttribute('href'));
-            if (!targetSection) return;
+const STORAGE_KEY='ari_manager_local_mirror';
+function loadLocalMirror(){ try{ const raw=localStorage.getItem(STORAGE_KEY); budgetList = raw?JSON.parse(raw):[]; }catch(e){ budgetList=[]; } }
+function saveLocalMirror(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetList)); }catch(e){console.warn(e);} }
 
-            showLoader(600);
-            setTimeout(() => {
-                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 220);
-        });
-    });
-}
+async function insertToSupabase(payload){ try{ const { data, error } = await supabase.from('presupuestos').insert([payload]).select(); if(error) return {success:false,error}; if(data && data.length>0) return {success:true,row:data[0]}; return {success:false,error:new Error('No data')}; }catch(e){ return {success:false,error:e}; } }
 
-// ==========================================================================
-// 5. CONTROLADOR DE TABS DE AUTENTICACIÓN (LOGIN VS REGISTRO)
-// ==========================================================================
+async function handleBudgetFormSubmit(e){ if(e && e.preventDefault) e.preventDefault(); const clientName = inputClientName?inputClientName.value.trim():''; const deviceModel = inputDeviceModel?inputDeviceModel.value.trim():''; const partsCost = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const laborCost = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const email = inputEmail?inputEmail.value.trim():(window.currentUser||'tecnico@soporte.com'); if(!clientName||!deviceModel){ showToast('Cliente y dispositivo son requeridos','error'); return; } const {subtotal,iva,total}=calculateAmounts(partsCost,laborCost); const fecha_creacion=new Date().toISOString(); const payload={ cliente:clientName, dispositivo:deviceModel, repuestos:partsCost, mano_obra:laborCost, iva, total, email, fecha_creacion }; showToast('Enviando a Supabase...','info'); const res = await insertToSupabase(payload); if(res.success && res.row){ const row=res.row; const record={ id: row.id || Date.now(), clientName: row.cliente || clientName, deviceModel: row.dispositivo || deviceModel, partsCost: row.repuestos ?? partsCost, laborCost: row.mano_obra ?? laborCost, subtotal: (row.repuestos ?? partsCost) + (row.mano_obra ?? laborCost), iva: row.iva ?? iva, total: row.total ?? total, date: row.fecha_creacion ? new Date(row.fecha_creacion).toLocaleString('es-ES') : getCurrentFormattedDate(), email: row.email || email }; budgetList.push(record); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('Presupuesto guardado en Supabase','success'); return; } const fallback = { id: Date.now(), clientName, deviceModel, partsCost, laborCost, subtotal, iva, total, date: getCurrentFormattedDate(), email }; budgetList.push(fallback); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('No se pudo guardar en la nube; guardado local','error'); }
 
-/**
- * Alterna el modo del formulario entre "Iniciar Sesión" y "Crear Cuenta"
- * @param {string} mode - El modo al que se desea cambiar ('login' o 'register')
- */
-function setAuthMode(mode) {
-    authMode = mode;
-    
+function init(){ loadLocalMirror(); renderHistory(); if(budgetForm) budgetForm.addEventListener('submit', handleBudgetFormSubmit); if(searchHistory) searchHistory.addEventListener('input', e=>renderHistory(e.target.value)); if(btnClearHistory) btnClearHistory.addEventListener('click', ()=>{ budgetList=[]; saveLocalMirror(); renderHistory(); showToast('Historial limpiado','success'); }); if(inputPartsCost||inputLaborCost){ const updatePreview=()=>{ const p=inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const l=inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const {subtotal,iva,total}=calculateAmounts(p,l); if(lblSubtotal) lblSubtotal.textContent=formatCurrency(subtotal); if(lblIva) lblIva.textContent=formatCurrency(iva); if(lblTotal) lblTotal.textContent=formatCurrency(total); }; if(inputPartsCost) inputPartsCost.addEventListener('input', updatePreview); if(inputLaborCost) inputLaborCost.addEventListener('input', updatePreview); }
+    if(landingSection&&authSection&&calculatorSection) navigateTo('landingSection'); }
+
     // Reseteamos errores visuales de autenticación
     resetAuthErrors();
 
