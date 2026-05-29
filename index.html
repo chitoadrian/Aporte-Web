@@ -240,7 +240,7 @@
 
                 <!-- Botón de acción principal -->
                 <div class="landing-action">
-                    <button id="btnEnterApp" class="btn-primary btn-large">
+                    <button id="btnEnterApp" type="button" class="btn-primary btn-large">
                         <span id="btnEnterAppText" data-i18n="btnEnterAppText">Comenzar ahora</span>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
                             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -505,6 +505,7 @@
                                 <span class="chart-value" id="ivaPercent">0%</span>
                             </div>
                         </div>
+                        <!-- Contenedor para la gráfica histórica de totales -->
                     </div>
 
                     <div class="card card-history">
@@ -604,6 +605,8 @@
         </div>
     </div>
 
+    <!-- jsPDF para exportar cotizaciones a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

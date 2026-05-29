@@ -99,6 +99,9 @@ const bodyHistory = document.getElementById('bodyHistory');
 const searchHistory = document.getElementById('searchHistory');
 const recordsBadge = document.getElementById('recordsBadge');
 const btnClearHistory = document.getElementById('btnClearHistory');
+const quoteFormTitle = document.getElementById('quoteFormTitle');
+
+let selectedBudgetId = null;
 
 const toastContainer = document.getElementById('toastContainer');
 const modalConfirm = document.getElementById('modalConfirm');
@@ -687,15 +690,19 @@ function navigateTo(sectionToShow) {
 }
 
 // Vinculación de eventos de botones de navegación
-btnEnterApp.addEventListener('click', () => {
-    showLoader(500);
-    setTimeout(() => navigateTo('authSection'), 200);
-});
+if (btnEnterApp) {
+    btnEnterApp.addEventListener('click', () => {
+        showLoader(500);
+        setTimeout(() => navigateTo('authSection'), 200);
+    });
+}
 
-btnBackToLanding.addEventListener('click', () => {
-    showLoader(500);
-    setTimeout(() => navigateTo('landingSection'), 200);
-});
+if (btnBackToLanding) {
+    btnBackToLanding.addEventListener('click', () => {
+        showLoader(500);
+        setTimeout(() => navigateTo('landingSection'), 200);
+    });
+}
 
 function showLoader(duration = 500) {
     if (!pageLoader) return;
@@ -1241,6 +1248,16 @@ function loadBudgetsFromLocalStorage() {
     } else {
         budgetList = [];
     }
+
+    selectedBudgetId = null;
+    if (quoteFormTitle) {
+        quoteFormTitle.textContent = 'Nueva Cotización';
+    }
+    if (budgetForm) {
+        budgetForm.reset();
+        updateBreakdownPreview();
+    }
+
     renderHistoryTable();
 }
 
@@ -1311,6 +1328,8 @@ function renderHistoryTable(filterText = '') {
 
     filteredList.slice().reverse().forEach(item => {
         const tr = document.createElement('tr');
+        tr.className = 'history-row';
+        tr.dataset.id = item.id;
         const displayId = `#${String(item.id).slice(-6)}`;
 
         tr.innerHTML = `
@@ -1320,7 +1339,14 @@ function renderHistoryTable(filterText = '') {
             <td class="col-total">${formatCurrency(item.total)}</td>
             <td>${item.date}</td>
             <td class="col-actions">
-                <button class="btn-delete-row" data-id="${item.id}" title="${t('deleteRowTitle')}">
+                <button type="button" class="btn-download-row" data-id="${item.id}" title="Descargar PDF">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+                <button type="button" class="btn-delete-row" data-id="${item.id}" title="${t('deleteRowTitle')}">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -1328,6 +1354,12 @@ function renderHistoryTable(filterText = '') {
                 </button>
             </td>
         `;
+
+        tr.addEventListener('click', (event) => {
+            if (event.target.closest('button')) return;
+            selectBudget(item.id);
+        });
+
         bodyHistory.appendChild(tr);
     });
 
@@ -1338,6 +1370,141 @@ function renderHistoryTable(filterText = '') {
             deleteSingleBudget(budgetId);
         });
     });
+
+    const downloadButtons = bodyHistory.querySelectorAll('.btn-download-row');
+    downloadButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const budgetId = parseInt(btn.getAttribute('data-id'));
+            const budget = budgetList.find(item => item.id === budgetId);
+            if (budget) {
+                downloadPdfForBudget(budget);
+            }
+        });
+    });
+
+
+    highlightSelectedBudgetRow();
+}
+
+/**
+ * RenderBudgetsTrendChart removido: no se usa ningún gráfico ahora.
+ */
+function renderBudgetsTrendChart() {
+    return;
+}
+
+// Convierte un elemento SVG en DataURL PNG para incluirlo en el PDF
+function svgToPngDataUrl(svgEl, width = 120, height = 120) {
+    return new Promise((resolve) => {
+        if (!svgEl) return resolve(null);
+        const clone = svgEl.cloneNode(true);
+        clone.setAttribute('width', width);
+        clone.setAttribute('height', height);
+        const svgString = new XMLSerializer().serializeToString(clone);
+        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/png');
+            URL.revokeObjectURL(url);
+            resolve(dataUrl);
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve(null);
+        };
+
+        img.src = url;
+    });
+}
+
+async function downloadPdfForBudget(budget) {
+    try {
+        const { jsPDF } = window.jspdf || {};
+        if (!jsPDF) {
+            showToast('jsPDF no está cargado', 'error');
+            return;
+        }
+
+        const svgLogo = document.querySelector('.header-logo .icon-logo') || document.querySelector('svg.icon-logo');
+        const logoDataUrl = await svgToPngDataUrl(svgLogo, 120, 120);
+
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const margin = 40;
+        let y = margin;
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        if (logoDataUrl) {
+            doc.addImage(logoDataUrl, 'PNG', margin, y, 60, 60);
+        }
+
+        doc.setFontSize(20);
+        doc.setTextColor(34, 34, 34);
+        doc.text('AC Manager', margin + 75, y + 24);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Gestor Profesional de Presupuestos', margin + 75, y + 42);
+
+        y += 80;
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(200);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 20;
+
+        doc.setFontSize(12);
+        doc.setTextColor(34, 34, 34);
+        doc.text(`ID: ${budget.id}`, margin, y);
+        doc.text(`Fecha: ${budget.date}`, pageWidth - margin - 180, y);
+        y += 18;
+        doc.text(`Cliente: ${budget.clientName}`, margin, y);
+        doc.text(`Equipo: ${budget.deviceModel}`, pageWidth - margin - 180, y);
+        y += 24;
+
+        doc.setFontSize(11);
+        doc.setTextColor(80, 80, 80);
+        doc.text('Detalle', margin, y);
+        doc.text('Valor', pageWidth - margin - 120, y);
+        y += 14;
+
+        doc.setTextColor(34, 34, 34);
+        doc.text('Repuestos', margin, y);
+        doc.text(formatCurrency(budget.partsCost), pageWidth - margin - 120, y);
+        y += 16;
+        doc.text('Mano de obra', margin, y);
+        doc.text(formatCurrency(budget.laborCost), pageWidth - margin - 120, y);
+        y += 16;
+        doc.text('Subtotal', margin, y);
+        doc.text(formatCurrency(budget.subtotal), pageWidth - margin - 120, y);
+        y += 16;
+        doc.text('IVA (15%)', margin, y);
+        doc.text(formatCurrency(budget.iva), pageWidth - margin - 120, y);
+        y += 18;
+
+        doc.setFontSize(14);
+        doc.setTextColor(0, 121, 191);
+        doc.text('TOTAL', margin, y);
+        doc.text(formatCurrency(budget.total), pageWidth - margin - 120, y);
+        y += 32;
+
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.text('AC Manager — Gestión profesional de presupuestos', margin, doc.internal.pageSize.getHeight() - 40);
+
+        const filename = `cotizacion_${budget.id}.pdf`;
+        doc.save(filename);
+    } catch (error) {
+        console.error(error);
+        showToast('Error al generar PDF', 'error');
+    }
 }
 
 function escapeHTML(str) {
@@ -1385,18 +1552,51 @@ function addNewBudget() {
     updateBreakdownPreview();
 }
 
+function selectBudget(budgetId) {
+    const budget = budgetList.find(item => item.id === budgetId);
+    if (!budget) return;
+
+    selectedBudgetId = budgetId;
+    inputClientName.value = budget.clientName;
+    inputDeviceModel.value = budget.deviceModel;
+    inputPartsCost.value = budget.partsCost.toFixed(2);
+    inputLaborCost.value = budget.laborCost.toFixed(2);
+    updateBreakdownPreview();
+    highlightSelectedBudgetRow();
+}
+
+function highlightSelectedBudgetRow() {
+    bodyHistory.querySelectorAll('tr.history-row').forEach(row => {
+        const rowBudgetId = parseInt(row.dataset.id, 10);
+        if (selectedBudgetId && rowBudgetId === selectedBudgetId) {
+            row.classList.add('selected-row');
+        } else {
+            row.classList.remove('selected-row');
+        }
+    });
+}
+
+
 function deleteSingleBudget(id) {
     const budgetToDelete = budgetList.find(item => item.id === id);
     const clientName = budgetToDelete ? budgetToDelete.clientName : 'Cliente';
 
     budgetList = budgetList.filter(item => item.id !== id);
+    if (selectedBudgetId === id) {
+        selectedBudgetId = null;
+        if (quoteFormTitle) {
+            quoteFormTitle.textContent = 'Nueva Cotización';
+        }
+    }
     saveBudgetsToLocalStorage();
     renderHistoryTable(searchHistory.value);
     showToast(translateMessage('quoteDeleted', { clientName }), 'error');
+
 }
 
 function clearAllHistory() {
     budgetList = [];
+    selectedBudgetId = null;
     saveBudgetsToLocalStorage();
     renderHistoryTable();
     showToast(translateMessage('historyCleared'), 'error');

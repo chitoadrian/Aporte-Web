@@ -69,10 +69,11 @@ body::before {
 
 /* Contenedor Principal */
 .app-container {
-    max-width: 1300px;
+    /* Full width shell: spans viewport while keeping inner content centered */
+    max-width: none;
     width: 100%;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 2rem clamp(12px, 4vw, 48px);
     display: flex;
     flex-direction: column;
     flex-grow: 1;
@@ -82,6 +83,16 @@ body::before {
     border-radius: var(--radius-lg);
     box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(20px);
+    box-sizing: border-box;
+}
+
+/* Keep immediate main/footer content constrained and centered for a professional layout */
+.app-container > main,
+.app-container > .app-footer {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -385,8 +396,11 @@ body::before {
     flex-direction: column;
     gap: 2.5rem;
     padding: 1rem 0;
-    max-width: 960px;
+    /* permitir más anchura en pantallas grandes */
+    max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Hero Block */
@@ -416,12 +430,15 @@ body::before {
     letter-spacing: -1px;
     margin-bottom: 1rem;
     line-height: 1.2;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .hero-description {
     font-size: 1.1rem;
     color: var(--text-muted);
-    max-width: 720px;
+    max-width: 1100px;
     margin: 0 auto;
 }
 
@@ -567,7 +584,7 @@ body::before {
 
 .visual-card {
     width: 100%;
-    max-width: 380px;
+    max-width: 540px;
     background: linear-gradient(180deg, rgba(0, 242, 254, 0.12), rgba(255, 255, 255, 0.04));
     border: 1px solid rgba(0, 242, 254, 0.12);
     border-radius: var(--radius-lg);
@@ -780,17 +797,17 @@ body::before {
 }
 
 .landing-action .btn-primary {
-    max-width: 260px;
+    max-width: 360px;
     width: auto;
 }
 
 .hero-block h2 {
-    max-width: 780px;
+    max-width: 1200px;
     margin: 0 auto 1rem;
 }
 
 .hero-description {
-    max-width: 700px;
+    max-width: 1100px;
     margin: 0 auto;
     color: #c1cbd7;
 }
@@ -815,7 +832,7 @@ body::before {
 }
 
 .card-auth {
-    max-width: 420px;
+    max-width: 540px;
     width: 100%;
     padding: 2.2rem 2rem;
     background-image: radial-gradient(at 0% 0%, rgba(0, 242, 254, 0.04) 0px, transparent 50%);
@@ -932,7 +949,13 @@ body::before {
 
 @media (min-width: 1024px) {
     .app-content {
-        grid-template-columns: 420px 1fr;
+        grid-template-columns: minmax(360px, 420px) 1fr;
+    }
+}
+
+@media (min-width: 1400px) {
+    .app-content {
+        grid-template-columns: 480px 1fr;
     }
 }
 
@@ -1135,6 +1158,26 @@ body::before {
     border: 1px solid rgba(0, 242, 254, 0.12);
     border-radius: var(--radius-md);
     padding: 1.25rem 1.2rem;
+}
+
+/* Contenedor de canvas responsivo para la gráfica histórica */
+.chart-canvas-wrapper {
+    margin-top: 1rem;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    padding: 0.6rem;
+    box-sizing: border-box;
+    display: none; /* se muestra dinámicamente cuando hay datos */
+}
+
+.chart-canvas-wrapper canvas {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 260px;
 }
 
 .chart-title {
@@ -1423,6 +1466,19 @@ tr:last-child td {
     border-bottom: none;
 }
 
+tr.history-row {
+    cursor: pointer;
+}
+
+tr.history-row.selected-row td {
+    background-color: rgba(0, 198, 255, 0.16);
+    color: #ffffff;
+}
+
+tr.history-row.selected-row:hover td {
+    background-color: rgba(0, 198, 255, 0.22);
+}
+
 tr:hover td {
     background-color: rgba(255, 255, 255, 0.02);
     color: var(--text-primary);
@@ -1440,8 +1496,11 @@ tr:hover td {
 }
 
 .col-actions {
-    text-align: center;
-    width: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    width: 140px;
 }
 
 .btn-delete-row {
@@ -1462,7 +1521,33 @@ tr:hover td {
     background-color: rgba(255, 106, 0, 0.1);
 }
 
-.btn-delete-row svg {
+.btn-download-row {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: var(--transition-smooth);
+    margin-right: 0.35rem;
+}
+
+.btn-download-row,
+.btn-delete-row {
+    min-width: 2.6rem;
+    margin-right: 0.45rem;
+}
+
+.btn-download-row:hover {
+    color: var(--accent-cyan);
+    background-color: rgba(0, 242, 254, 0.08);
+}
+
+.btn-delete-row svg,
+.btn-download-row svg {
     width: 16px;
     height: 16px;
 }
@@ -1663,7 +1748,7 @@ tr:hover td {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 2.2rem;
-    max-width: 440px;
+    max-width: 640px;
     width: 90%;
     box-shadow: var(--shadow-premium);
     text-align: center;
