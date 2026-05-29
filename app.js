@@ -1,20 +1,24 @@
+// Versión final: limpia y funcional
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable__qQmLTITfpuVePH67M2dCw_CF8kmosN";
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// app.js - Conexión directa a Supabase y calculadora
+// Main sections and controls
+const landingSection = document.getElementById('landingSection');
+const authSection = document.getElementById('authSection');
+const calculatorSection = document.getElementById('calculatorSection');
+const btnEnterApp = document.getElementById('btnEnterApp');
+const btnBackToLanding = document.getElementById('btnBackToLanding');
 
-let budgetList = [];
+function navigateTo(id){ [landingSection, authSection, calculatorSection].forEach(s=>{ if(!s) return; s.classList.toggle('hidden', s.id!==id); }); }
 
-function formatCurrency(v){ return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(v); }
-function getCurrentFormattedDate(){ return new Date().toLocaleString('es-ES'); }
-function showToast(msg){ console.log('[AriManager]', msg); }
-function escapeHTML(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Fix: make sure the 'Comenzar ahora' button navigates correctly
+if(btnEnterApp){ btnEnterApp.addEventListener('click', (ev)=>{ ev.preventDefault(); if(authSection) navigateTo('authSection'); else if(calculatorSection) navigateTo('calculatorSection'); }); }
+if(btnBackToLanding){ btnBackToLanding.addEventListener('click', (ev)=>{ ev.preventDefault(); if(landingSection) navigateTo('landingSection'); }); }
 
-// Selectores esperados en tu HTML
+// Calculator controls
 const budgetForm = document.getElementById('budgetForm');
 const inputClientName = document.getElementById('clientName');
 const inputDeviceModel = document.getElementById('deviceModel');
@@ -22,28 +26,28 @@ const inputPartsCost = document.getElementById('partsCost');
 const inputLaborCost = document.getElementById('laborCost');
 const inputEmail = document.getElementById('email');
 const bodyHistory = document.getElementById('bodyHistory');
-const searchHistory = document.getElementById('searchHistory');
-const recordsBadge = document.getElementById('recordsBadge');
-const btnClearHistory = document.getElementById('btnClearHistory');
 const lblSubtotal = document.getElementById('lblSubtotal');
 const lblIva = document.getElementById('lblIva');
 const lblTotal = document.getElementById('lblTotal');
 
-function calculateAmounts(parts, labor){ const p = Number(parts)||0; const l = Number(labor)||0; const subtotal = +(p + l).toFixed(2); const iva = +((subtotal * 0.15)).toFixed(2); const total = +(subtotal + iva).toFixed(2); return {subtotal, iva, total}; }
+let budgetList = [];
+function compute(parts, labor){ const p = Number(parts)||0; const l = Number(labor)||0; const subtotal = +(p + l).toFixed(2); const iva = +((subtotal * 0.15)).toFixed(2); const total = +(subtotal + iva).toFixed(2); return {subtotal, iva, total}; }
 
-function renderHistory(filter=''){ if(!bodyHistory) return; bodyHistory.innerHTML=''; const q=(filter||'').toLowerCase().trim(); const items = budgetList.filter(b=> (b.clientName||'').toLowerCase().includes(q) || (b.deviceModel||'').toLowerCase().includes(q) ); if(recordsBadge) recordsBadge.textContent = `${budgetList.length} registros`; if(items.length===0){ bodyHistory.innerHTML = '<tr><td colspan="6">No hay registros</td></tr>'; return; } items.slice().reverse().forEach(it=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>#${String(it.id).slice(-6)}</td><td>${escapeHTML(it.clientName)}</td><td>${escapeHTML(it.deviceModel)}</td><td>${formatCurrency(it.total)}</td><td>${it.date}</td><td><button class="btn-delete" data-id="${it.id}">Borrar</button></td>`; bodyHistory.appendChild(tr); }); bodyHistory.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click', ()=>{ const id = btn.getAttribute('data-id'); budgetList = budgetList.filter(b=>String(b.id)!==String(id)); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); showToast('Registro eliminado'); })); }
+function updatePreview(){ if(!lblSubtotal) return; const p = inputPartsCost?inputPartsCost.value:0; const l = inputLaborCost?inputLaborCost.value:0; const {subtotal, iva, total} = compute(p,l); lblSubtotal.textContent = subtotal.toFixed(2); lblIva.textContent = iva.toFixed(2); lblTotal.textContent = total.toFixed(2); }
+if(inputPartsCost) inputPartsCost.addEventListener('input', updatePreview);
+if(inputLaborCost) inputLaborCost.addEventListener('input', updatePreview);
 
 const STORAGE_KEY = 'ari_manager_local_mirror';
-function loadLocalMirror(){ try{ const raw = localStorage.getItem(STORAGE_KEY); budgetList = raw?JSON.parse(raw):[]; }catch(e){ budgetList = []; } }
-function saveLocalMirror(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetList)); }catch(e){ console.warn(e); } }
+function loadLocal(){ try{ const raw = localStorage.getItem(STORAGE_KEY); budgetList = raw?JSON.parse(raw):[]; }catch(e){ budgetList = []; } }
+function saveLocal(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetList)); }catch(e){} }
 
-async function insertToSupabase(payload){ try{ const { data, error } = await supabase.from('presupuestos').insert([payload]).select(); if(error) return { success:false, error }; if(data && data.length>0) return { success:true, row:data[0] }; return { success:false, error:new Error('No data') }; }catch(e){ return { success:false, error:e }; } }
+async function insertToSupabase(payload){ try{ const { data, error } = await supabase.from('presupuestos').insert([payload]).select(); if(error) throw error; return data && data[0]; }catch(e){ console.warn('Supabase error', e); return null; } }
 
-async function handleBudgetFormSubmit(e){ if(e && e.preventDefault) e.preventDefault(); const clientName = inputClientName?inputClientName.value.trim():''; const deviceModel = inputDeviceModel?inputDeviceModel.value.trim():''; const partsCost = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const laborCost = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const email = inputEmail?inputEmail.value.trim():'desconocido@local'; if(!clientName||!deviceModel){ showToast('Cliente y dispositivo son requeridos'); return; } const {subtotal, iva, total} = calculateAmounts(partsCost, laborCost); const fecha_creacion = new Date().toISOString(); const payload = { cliente: clientName, dispositivo: deviceModel, repuestos: partsCost, mano_obra: laborCost, iva, total, email, fecha_creacion }; showToast('Enviando a Supabase...'); const res = await insertToSupabase(payload); if(res.success && res.row){ const row = res.row; const record = { id: row.id || Date.now(), clientName: row.cliente || clientName, deviceModel: row.dispositivo || deviceModel, partsCost: row.repuestos ?? partsCost, laborCost: row.mano_obra ?? laborCost, subtotal: row.iva ? +( (row.total || total) - (row.iva || iva) ).toFixed(2) : subtotal, iva: row.iva ?? iva, total: row.total ?? total, date: row.fecha_creacion? new Date(row.fecha_creacion).toLocaleString('es-ES') : getCurrentFormattedDate(), email: row.email || email }; budgetList.push(record); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('Presupuesto guardado en Supabase'); return; } const fallback = { id: Date.now(), clientName, deviceModel, partsCost, laborCost, subtotal, iva, total, date: getCurrentFormattedDate(), email }; budgetList.push(fallback); saveLocalMirror(); renderHistory(searchHistory?searchHistory.value:''); if(budgetForm) budgetForm.reset(); showToast('No se pudo guardar en la nube; guardado local'); }
+if(budgetForm){ budgetForm.addEventListener('submit', async (e)=>{ e.preventDefault(); const client = inputClientName.value.trim(); const device = inputDeviceModel.value.trim(); const parts = parseFloat(inputPartsCost.value)||0; const labor = parseFloat(inputLaborCost.value)||0; if(!client||!device) return alert('Cliente y dispositivo requeridos'); const {subtotal, iva, total} = compute(parts,labor); const payload = { cliente: client, dispositivo: device, repuestos: parts, mano_obra: labor, iva, total, email: inputEmail?inputEmail.value:'', fecha_creacion: new Date().toISOString() }; const row = await insertToSupabase(payload); const record = { id: row?.id || Date.now(), clientName: client, deviceModel: device, partsCost: parts, laborCost: labor, subtotal, iva, total, date: row?.fecha_creacion? new Date(row.fecha_creacion).toLocaleString('es-ES') : new Date().toLocaleString('es-ES') }; budgetList.push(record); saveLocal(); if(bodyHistory){ const tr = document.createElement('tr'); tr.innerHTML = `<td>${record.id}</td><td>${record.clientName}</td><td>${record.deviceModel}</td><td>${record.total}</td><td>${record.date}</td>`; bodyHistory.appendChild(tr); } budgetForm.reset(); updatePreview(); }); }
 
-function init(){ loadLocalMirror(); renderHistory(); if(budgetForm) budgetForm.addEventListener('submit', handleBudgetFormSubmit); if(searchHistory) searchHistory.addEventListener('input', e=>renderHistory(e.target.value)); if(btnClearHistory) btnClearHistory.addEventListener('click', ()=>{ budgetList=[]; saveLocalMirror(); renderHistory(); showToast('Historial limpiado'); }); if(inputPartsCost||inputLaborCost){ const updatePreview = ()=>{ const p = inputPartsCost?parseFloat(inputPartsCost.value)||0:0; const l = inputLaborCost?parseFloat(inputLaborCost.value)||0:0; const {subtotal, iva, total} = calculateAmounts(p,l); if(lblSubtotal) lblSubtotal.textContent = formatCurrency(subtotal); if(lblIva) lblIva.textContent = formatCurrency(iva); if(lblTotal) lblTotal.textContent = formatCurrency(total); }; if(inputPartsCost) inputPartsCost.addEventListener('input', updatePreview); if(inputLaborCost) inputLaborCost.addEventListener('input', updatePreview); } }
+function init(){ loadLocal(); updatePreview(); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co";
