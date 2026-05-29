@@ -1,70 +1,10 @@
-/**
- * PROYECTO ESCOLAR: CALCULADORA E HISTORIAL DE PRESUPUESTOS PARA SERVICIOS TÉCNICOS
- * Tema 4 - 3ero de Bachillerato en Informática
- * 
- * ARCHIVO: app.js (FASE 2: CON EXPLICACIÓN Y AUTENTICACIÓN FIREBASE / SIMULADA)
- * Propósito: Gestionar el enrutamiento de vistas, la lógica de autenticación e inicio de sesión
- *            (tanto con Firebase real como en modo simulación local), el envío simulado de correos,
- *            así como el control total de los presupuestos y el historial con persistencia.
- */
-
-// ==========================================================================
-// 1. CONFIGURACIÓN DE FIREBASE (LISTO PARA TUS CREDENCIALES REALES)
-// ==========================================================================
-// Reemplaza los datos dentro del objeto si deseas conectarte a tu proyecto real de Firebase.
-const firebaseConfig = {
-    apiKey: "TU_API_KEY_AQUI",
-    authDomain: "TU_PROYECTO.firebaseapp.com",
-    projectId: "TU_PROYECTO",
-    storageBucket: "TU_PROYECTO.appspot.com",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
-};
-
-// Variable de control para saber si se usará Firebase real o el Simulador Local
-let isFirebaseEnabled = false;
-let authService = null; // Guardará la referencia a Firebase Auth si está activo
-
-// Intentamos inicializar Firebase si las llaves han sido ingresadas
-if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
-    try {
-        firebase.initializeApp(firebaseConfig);
-        authService = firebase.auth();
-        isFirebaseEnabled = true;
-        console.log("Firebase Auth: Inicializado con éxito.");
-    } catch (error) {
-        console.error("Firebase Auth: Fallo al inicializar con los parámetros provistos.", error);
-    }
-} else {
-    console.log("Firebase Auth: Usando Modo de Simulación de Base de Datos Local.");
-}
-
-// ==========================================================================
-// 1B. CONFIGURACIÓN DE SUPABASE (CONEXIÓN DIRECTA CON CLOUD)
-// ==========================================================================
-// Importamos el cliente de Supabase para sincronización en la nube
-// En navegadores, usamos la versión ESM (ES Modules)
-let supabase = null;
-let isSupabaseEnabled = false;
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable__qQmLTITfpuVePH67M2dCw_CF8kmosN";
 
-// Cargar Supabase de forma dinámica
-async function initializeSupabase() {
-    try {
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        isSupabaseEnabled = true;
-        console.log("Supabase: Inicializado con éxito para sincronización en la nube.");
-    } catch (error) {
-        console.warn("Supabase: No se pudo inicializar. Se utilizará solo localStorage.", error);
-        isSupabaseEnabled = false;
-    }
-}
-
-// Llamar inicialización de Supabase al cargar la página
-initializeSupabase();
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let isSupabaseEnabled = true;
 
 // ==========================================
 // FUNCIONES PARA MANEJAR DATOS CON SUPABASE
@@ -1790,10 +1730,10 @@ async function addNewBudget() {
     const subtotal = partsCost + laborCost;
     const iva = subtotal * 0.15;
     const total = subtotal + iva;
-
     const newBudget = {
+        // id será sustituido por el id de Supabase cuando se persista en la nube
         id: Date.now(),
-        ownerEmail: currentUser, // Registramos qué técnico guardó este presupuesto
+        ownerEmail: currentUser,
         clientName: inputClientName.value.trim(),
         deviceModel: inputDeviceModel.value.trim(),
         partsCost: partsCost,
@@ -1804,18 +1744,8 @@ async function addNewBudget() {
         date: getCurrentFormattedDate()
     };
 
-    // 1. Guardar PRIMERO en localStorage (para inmediatez)
-    budgetList.push(newBudget);
-    saveBudgetsToLocalStorage();
-    console.log("✓ Presupuesto guardado en localStorage");
-    
-    // 2. Renderizar tabla y limpiar formulario inmediatamente
-    renderHistoryTable(searchHistory.value);
-    budgetForm.reset();
-    updateBreakdownPreview();
-    
-    // 3. Intentar guardar en Supabase de forma asincrónica
-    if (isSupabaseEnabled && supabase) {
+    // Intentar guardar DIRECTAMENTE en Supabase usando el cliente global `supabase`
+    if (isSupabaseEnabled && typeof supabase !== 'undefined' && supabase) {
         try {
             const resultSupabase = await guardarPresupuestoSupabase(
                 newBudget.clientName,
@@ -1824,34 +1754,50 @@ async function addNewBudget() {
                 newBudget.laborCost,
                 newBudget.ownerEmail
             );
-            
+
             if (resultSupabase) {
-                console.log("✓ Presupuesto sincronizado a Supabase con ID:", resultSupabase.id);
+                // Usar el ID y fecha retornados por Supabase para el historial local
+                const saved = {
+                    id: resultSupabase.id || Date.now(),
+                    ownerEmail: resultSupabase.email || newBudget.ownerEmail,
+                    clientName: resultSupabase.cliente || newBudget.clientName,
+                    deviceModel: resultSupabase.dispositivo || newBudget.deviceModel,
+                    partsCost: resultSupabase.repuestos ?? newBudget.partsCost,
+                    laborCost: resultSupabase.mano_obra ?? newBudget.laborCost,
+                    subtotal: (resultSupabase.repuestos ?? newBudget.partsCost) + (resultSupabase.mano_obra ?? newBudget.laborCost),
+                    iva: resultSupabase.iva ?? newBudget.iva,
+                    total: resultSupabase.total ?? newBudget.total,
+                    date: resultSupabase.fecha_creacion ? new Date(resultSupabase.fecha_creacion).toLocaleDateString('es-ES') : newBudget.date
+                };
+
+                // Guardar en historial local como reflejo de lo que hay en la nube
+                budgetList.push(saved);
+                saveBudgetsToLocalStorage();
+                renderHistoryTable(searchHistory.value);
+                budgetForm.reset();
+                updateBreakdownPreview();
+
                 showToast(
-                    translateMessage('quoteSaved', { clientName: newBudget.clientName }) + 
-                    " (Sincronizado en la nube ☁️)",
+                    translateMessage('quoteSaved', { clientName: saved.clientName }) +
+                    ' (Sincronizado en la nube ☁️)',
                     'success'
                 );
-            } else {
-                console.warn("⚠️ Supabase respondió sin ID, pero se guardó localmente");
-                showToast(
-                    translateMessage('quoteSaved', { clientName: newBudget.clientName }) + 
-                    " (Guardado localmente, sincronización pendiente)",
-                    'warning'
-                );
+                console.log('✓ Presupuesto guardado y sincronizado a Supabase con ID:', saved.id);
+                return;
             }
         } catch (error) {
-            console.error("Error al sincronizar con Supabase:", error);
-            showToast(
-                translateMessage('quoteSaved', { clientName: newBudget.clientName }) + 
-                " (Solo en local, revisar conexión)",
-                'warning'
-            );
+            console.error('❌ Error guardando directamente en Supabase:', error);
+            // En caso de error de red/servidor, caeremos al flujo de guardado local
         }
-    } else {
-        // Supabase no disponible, mostrar que se guardó solo localmente
-        showToast(translateMessage('quoteSaved', { clientName: newBudget.clientName }));
     }
+
+    // Si no se pudo guardar en Supabase, guardar localmente SIN marcarlo como "pendiente"
+    budgetList.push(newBudget);
+    saveBudgetsToLocalStorage();
+    renderHistoryTable(searchHistory.value);
+    budgetForm.reset();
+    updateBreakdownPreview();
+    showToast(translateMessage('quoteSaved', { clientName: newBudget.clientName }), 'warning');
 }
 
 function selectBudget(budgetId) {
