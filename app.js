@@ -40,6 +40,196 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
 }
 
 // ==========================================================================
+// 1B. CONFIGURACIÓN DE SUPABASE (CONEXIÓN DIRECTA CON CLOUD)
+// ==========================================================================
+// Importamos el cliente de Supabase para sincronización en la nube
+// En navegadores, usamos la versión ESM (ES Modules)
+let supabase = null;
+let isSupabaseEnabled = false;
+
+const SUPABASE_URL = "https://qvnbvfwcodjtqhbczxar.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable__qQmLTITfpuVePH67M2dCw_CF8kmosN";
+
+// Cargar Supabase de forma dinámica
+async function initializeSupabase() {
+    try {
+        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        isSupabaseEnabled = true;
+        console.log("Supabase: Inicializado con éxito para sincronización en la nube.");
+    } catch (error) {
+        console.warn("Supabase: No se pudo inicializar. Se utilizará solo localStorage.", error);
+        isSupabaseEnabled = false;
+    }
+}
+
+// Llamar inicialización de Supabase al cargar la página
+initializeSupabase();
+
+// ==========================================
+// FUNCIONES PARA MANEJAR DATOS CON SUPABASE
+// ==========================================
+
+/**
+ * FUNCIÓN PARA GUARDAR PRESUPUESTO (INSERT en Supabase)
+ * @param {string} cliente - Nombre del cliente
+ * @param {string} dispositivo - Modelo del dispositivo
+ * @param {number} repuestos - Costo de repuestos
+ * @param {number} manoObra - Costo de mano de obra
+ * @param {string} email - Email del usuario (técnico)
+ */
+async function guardarPresupuestoSupabase(cliente, dispositivo, repuestos, manoObra, email = null) {
+    if (!isSupabaseEnabled || !supabase) {
+        console.warn("Supabase no está disponible. El presupuesto se guardará solo en localStorage.");
+        return null;
+    }
+
+    try {
+        const subtotal = parseFloat(repuestos) + parseFloat(manoObra);
+        const calculatedIva = subtotal * 0.15;
+        const totalGeneral = subtotal + calculatedIva;
+
+        const { data, error } = await supabase
+            .from('presupuestos')
+            .insert([
+                { 
+                    cliente: cliente, 
+                    dispositivo: dispositivo, 
+                    repuestos: parseFloat(repuestos), 
+                    mano_obra: parseFloat(manoObra), 
+                    iva: calculatedIva, 
+                    total: totalGeneral,
+                    email: email || currentUser || 'tecnico@soporte.com',
+                    fecha_creacion: new Date().toISOString()
+                }
+            ])
+            .select();
+
+        if (error) {
+            console.error("Error al guardar en Supabase:", error.message);
+            return null;
+        } else {
+            console.log("✓ Presupuesto guardado con éxito en Supabase:", data);
+            return data[0];
+        }
+    } catch (error) {
+        console.error("Excepción al guardar presupuesto en Supabase:", error);
+        return null;
+    }
+}
+
+/**
+ * FUNCIÓN PARA LEER PRESUPUESTOS (SELECT de Supabase)
+ * @param {string} email - Filtrar por email del técnico (opcional)
+ * @returns {array} Array de presupuestos
+ */
+async function obtenerHistorialSupabase(email = null) {
+    if (!isSupabaseEnabled || !supabase) {
+        console.warn("Supabase no está disponible. Se usará localStorage.");
+        return [];
+    }
+
+    try {
+        let query = supabase
+            .from('presupuestos')
+            .select('*')
+            .order('id', { ascending: false });
+
+        // Si se proporciona email, filtrar solo los presupuestos de ese técnico
+        if (email) {
+            query = query.eq('email', email);
+        }
+
+        const { data: presupuestos, error } = await query;
+
+        if (error) {
+            console.error("Error al obtener historial de Supabase:", error.message);
+            return [];
+        }
+
+        console.log("✓ Historial obtenido de Supabase:", presupuestos);
+        return presupuestos || [];
+    } catch (error) {
+        console.error("Excepción al obtener historial de Supabase:", error);
+        return [];
+    }
+}
+
+/**
+ * FUNCIÓN PARA ELIMINAR PRESUPUESTO (DELETE de Supabase)
+ * @param {number} idRegistro - ID del presupuesto a eliminar
+ */
+async function eliminarPresupuestoSupabase(idRegistro) {
+    if (!isSupabaseEnabled || !supabase) {
+        console.warn("Supabase no está disponible. Se usará localStorage.");
+        return false;
+    }
+
+    try {
+        const { error } = await supabase
+            .from('presupuestos')
+            .delete()
+            .eq('id', idRegistro);
+
+        if (error) {
+            console.error("Error al eliminar de Supabase:", error.message);
+            return false;
+        } else {
+            console.log("✓ Presupuesto eliminado de Supabase con ID:", idRegistro);
+            return true;
+        }
+    } catch (error) {
+        console.error("Excepción al eliminar presupuesto de Supabase:", error);
+        return false;
+    }
+}
+
+/**
+ * FUNCIÓN PARA SINCRONIZAR DATOS CON SUPABASE
+ * Carga los presupuestos desde Supabase y los sincroniza con localStorage
+ * @param {string} email - Email del técnico (opcional, para filtrar)
+ */
+async function sincronizarDesdeSupabase(email = null) {
+    if (!isSupabaseEnabled || !supabase) {
+        console.log("Supabase no disponible. Usando solo localStorage.");
+        return;
+    }
+
+    try {
+        const presupuestosSupabase = await obtenerHistorialSupabase(email || currentUser);
+        
+        if (presupuestosSupabase && presupuestosSupabase.length > 0) {
+            // Mapear datos de Supabase al formato local
+            const presupuestosMappeados = presupuestosSupabase.map(p => ({
+                id: p.id,
+                ownerEmail: p.email || currentUser,
+                clientName: p.cliente,
+                deviceModel: p.dispositivo,
+                partsCost: p.repuestos,
+                laborCost: p.mano_obra,
+                subtotal: p.repuestos + p.mano_obra,
+                iva: p.iva,
+                total: p.total,
+                date: new Date(p.fecha_creacion).toLocaleDateString('es-ES')
+            }));
+
+            // Actualizar la lista local (evitar duplicados)
+            const idsLocales = budgetList.map(b => b.id);
+            const nuevosBudgets = presupuestosMappeados.filter(
+                p => !idsLocales.includes(p.id)
+            );
+
+            budgetList = [...budgetList, ...nuevosBudgets];
+            saveBudgetsToLocalStorage();
+            
+            console.log(`✓ Sincronización completada: ${nuevosBudgets.length} presupuestos nuevos desde Supabase`);
+        }
+    } catch (error) {
+        console.error("Error durante la sincronización de Supabase:", error);
+    }
+}
+
+// ==========================================================================
 // 2. SELECCIÓN DE ELEMENTOS DEL DOM
 // ==========================================================================
 
@@ -1544,7 +1734,25 @@ function addNewBudget() {
     };
 
     budgetList.push(newBudget);
+    
+    // Guardar en localStorage
     saveBudgetsToLocalStorage();
+    
+    // También guardar en Supabase si está disponible
+    if (isSupabaseEnabled && supabase) {
+        guardarPresupuestoSupabase(
+            newBudget.clientName,
+            newBudget.deviceModel,
+            newBudget.partsCost,
+            newBudget.laborCost,
+            newBudget.ownerEmail
+        ).then((result) => {
+            if (result) {
+                console.log("✓ Presupuesto sincronizado a Supabase");
+            }
+        });
+    }
+    
     renderHistoryTable(searchHistory.value);
     showToast(translateMessage('quoteSaved', { clientName: newBudget.clientName }));
 
@@ -1589,6 +1797,16 @@ function deleteSingleBudget(id) {
         }
     }
     saveBudgetsToLocalStorage();
+    
+    // También eliminar de Supabase si está disponible
+    if (isSupabaseEnabled && supabase && budgetToDelete) {
+        eliminarPresupuestoSupabase(id).then((success) => {
+            if (success) {
+                console.log("✓ Presupuesto eliminado de Supabase");
+            }
+        });
+    }
+    
     renderHistoryTable(searchHistory.value);
     showToast(translateMessage('quoteDeleted', { clientName }), 'error');
 
