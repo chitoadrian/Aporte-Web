@@ -382,22 +382,21 @@ async function handleBudgetFormSubmit(event) {
 }
 
 function drawPdfLogo(doc) {
-  // Logo estilo web: círculo oscuro con A celeste
-  doc.setFillColor(7, 19, 30);
+  // Logo estilo página: círculo oscuro con A celeste
+  doc.setFillColor(5, 12, 20);
   doc.circle(22, 21, 9.5, 'F');
 
-  doc.setFillColor(0, 92, 120);
+  doc.setFillColor(0, 72, 95);
   doc.circle(22, 21, 8.2, 'F');
 
   doc.setTextColor(0, 198, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('A', 22, 26, { align: 'center' });
+  doc.setFontSize(18);
+  doc.text('A', 22, 25, { align: 'center' });
 
-  // Brillo pequeño
-  doc.setTextColor(120, 230, 255);
-  doc.setFontSize(12);
-  doc.text('A', 22, 20, { align: 'center' });
+  doc.setTextColor(130, 235, 255);
+  doc.setFontSize(8);
+  doc.text('A', 22, 19.5, { align: 'center' });
 }
 
 function generatePDF(item) {
@@ -414,15 +413,20 @@ function generatePDF(item) {
   doc.setFillColor(10, 18, 32);
   doc.rect(0, 0, pageWidth, 42, 'F');
   drawPdfLogo(doc);
-  doc.setTextColor(255, 255, 255);
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(21);
-  doc.text('AC Manager', 40, 18);
+  doc.setFontSize(20);
+
+  doc.setTextColor(255, 255, 255);
+  doc.text('AC', 40, 18);
+
+  doc.setTextColor(0, 198, 255);
+  doc.text('Manager', 55, 18);
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text('Cotización profesional para servicios técnicos', 40, 27);
-  doc.text(`Cotización N° ${String(item.id).slice(-8)}`, pageWidth - 18, 18, { align: 'right' });
-  doc.text(String(item.date), pageWidth - 18, 27, { align: 'right' });
+  doc.setTextColor(180, 190, 205);
+  doc.text('Calculadora de Presupuestos y Servicios Técnicos', 40, 27);
 
   doc.setTextColor(15, 23, 42);
   doc.setFont('helvetica', 'bold');
