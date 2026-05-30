@@ -280,9 +280,9 @@ function renderHistory(filter = '') {
       <td>${escapeHTML(item.deviceModel)}</td>
       <td>${formatCurrency(item.total)}</td>
       <td>${escapeHTML(item.date)}</td>
-      <td>
-        <button type="button" class="btn-delete" data-id="${escapeHTML(item.id)}" title="Borrar cotización">🗑️ Borrar</button>
-        <button type="button" class="btn-pdf" data-id="${escapeHTML(item.id)}" title="Descargar PDF">📄 PDF</button>
+      <td class="action-buttons">
+        <button type="button" class="btn-delete icon-btn" data-id="${escapeHTML(item.id)}" title="Borrar cotización">🗑️</button>
+        <button type="button" class="btn-pdf icon-btn" data-id="${escapeHTML(item.id)}" title="Descargar PDF">📄</button>
       </td>
     `;
     bodyHistory.appendChild(tr);
