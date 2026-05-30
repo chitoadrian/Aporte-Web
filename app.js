@@ -382,16 +382,22 @@ async function handleBudgetFormSubmit(event) {
 }
 
 function drawPdfLogo(doc) {
-  doc.setFillColor(8, 20, 35);
-  doc.circle(22, 21, 12, 'F');
-  doc.setFillColor(0, 198, 255);
-  doc.circle(22, 21, 10, 'F');
-  doc.setFillColor(0, 198, 255);
-  doc.circle(22, 21, 13, 'S');
-  doc.setTextColor(255, 255, 255);
+  // Logo estilo web: círculo oscuro con A celeste
+  doc.setFillColor(7, 19, 30);
+  doc.circle(22, 21, 9.5, 'F');
+
+  doc.setFillColor(0, 92, 120);
+  doc.circle(22, 21, 8.2, 'F');
+
+  doc.setTextColor(0, 198, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.text('A', 22, 26, { align: 'center' });
+
+  // Brillo pequeño
+  doc.setTextColor(120, 230, 255);
+  doc.setFontSize(12);
+  doc.text('A', 22, 20, { align: 'center' });
 }
 
 function generatePDF(item) {
