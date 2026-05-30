@@ -281,8 +281,8 @@ function renderHistory(filter = '') {
       <td>${formatCurrency(item.total)}</td>
       <td>${escapeHTML(item.date)}</td>
       <td>
-        <button type="button" class="btn-delete" data-id="${escapeHTML(item.id)}">Borrar</button>
-        <button type="button" class="btn-pdf" data-id="${escapeHTML(item.id)}">PDF</button>
+        <button type="button" class="btn-delete" data-id="${escapeHTML(item.id)}" title="Borrar cotización">🗑️ Borrar</button>
+        <button type="button" class="btn-pdf" data-id="${escapeHTML(item.id)}" title="Descargar PDF">📄 PDF</button>
       </td>
     `;
     bodyHistory.appendChild(tr);
@@ -389,18 +389,96 @@ function generatePDF(item) {
   }
 
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  doc.setFillColor(10, 18, 32);
+  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.setFillColor(0, 198, 255);
+  doc.circle(22, 21, 11, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text('AC Manager - Cotización', 20, 20);
+  doc.text('AC', 16, 25);
+  doc.setFontSize(21);
+  doc.text('AC Manager', 40, 18);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text('Cotización profesional para servicios técnicos', 40, 27);
+  doc.text(`Cotización N° ${String(item.id).slice(-8)}`, pageWidth - 18, 18, { align: 'right' });
+  doc.text(String(item.date), pageWidth - 18, 27, { align: 'right' });
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text('Datos del cliente', 18, 58);
+  doc.setDrawColor(0, 198, 255);
+  doc.line(18, 62, 86, 62);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.text(`Nombre: ${item.clientName}`, 18, 74);
+  doc.text(`Equipo / Producto: ${item.deviceModel}`, 18, 84);
+  doc.text(`Usuario: ${item.email || currentUser || 'No registrado'}`, 18, 94);
+
+  doc.setFillColor(241, 245, 249);
+  doc.roundedRect(122, 52, 68, 47, 4, 4, 'F');
+  doc.setTextColor(51, 65, 85);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('TOTAL A PAGAR', 156, 65, { align: 'center' });
+  doc.setTextColor(0, 94, 170);
+  doc.setFontSize(20);
+  doc.text(formatCurrency(item.total), 156, 82, { align: 'center' });
+  doc.setTextColor(100, 116, 139);
+  doc.setFontSize(9);
+  doc.text('IVA 15% incluido', 156, 92, { align: 'center' });
+
+  const startY = 120;
+  doc.setFillColor(15, 23, 42);
+  doc.roundedRect(18, startY, 174, 12, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('Descripción', 25, startY + 8);
+  doc.text('Precio', 183, startY + 8, { align: 'right' });
+
+  const rows = [
+    ['Repuestos / productos', item.partsCost],
+    ['Mano de obra', item.laborCost],
+    ['Subtotal', item.subtotal],
+    ['IVA 15%', item.iva]
+  ];
+
+  let y = startY + 24;
+  rows.forEach((row, index) => {
+    if (index % 2 === 0) {
+      doc.setFillColor(248, 250, 252);
+      doc.rect(18, y - 8, 174, 12, 'F');
+    }
+    doc.setTextColor(30, 41, 59);
+    doc.setFont('helvetica', index >= 2 ? 'bold' : 'normal');
+    doc.setFontSize(11);
+    doc.text(row[0], 25, y);
+    doc.text(formatCurrency(row[1]), 183, y, { align: 'right' });
+    y += 14;
+  });
+
+  doc.setFillColor(0, 94, 170);
+  doc.roundedRect(112, y, 80, 18, 4, 4, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text(`Cliente: ${item.clientName}`, 20, 40);
-  doc.text(`Dispositivo: ${item.deviceModel}`, 20, 50);
-  doc.text(`Fecha: ${item.date}`, 20, 60);
-  doc.text(`Repuestos: ${formatCurrency(item.partsCost)}`, 20, 80);
-  doc.text(`Mano de obra: ${formatCurrency(item.laborCost)}`, 20, 90);
-  doc.text(`Subtotal: ${formatCurrency(item.subtotal)}`, 20, 105);
-  doc.text(`IVA 15%: ${formatCurrency(item.iva)}`, 20, 115);
-  doc.setFontSize(15);
-  doc.text(`Total: ${formatCurrency(item.total)}`, 20, 130);
+  doc.text('Total general', 119, y + 12);
+  doc.text(formatCurrency(item.total), 185, y + 12, { align: 'right' });
+
+  doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setDrawColor(226, 232, 240);
+  doc.line(18, pageHeight - 32, 192, pageHeight - 32);
+  doc.text('Cotización generada automáticamente por AC Manager.', 18, pageHeight - 24);
+  doc.text('Gracias por confiar en nuestro servicio técnico.', 18, pageHeight - 17);
+
   doc.save(`cotizacion-${item.id}.pdf`);
 }
 
@@ -410,7 +488,7 @@ function init() {
   setAuthMode('login');
 
   if (currentUser && inputEmail) inputEmail.value = currentUser;
-  navigateTo(currentUser ? 'calculatorSection' : 'landingSection');
+  navigateTo('landingSection');
 
   btnEnterApp?.addEventListener('click', (event) => {
     event.preventDefault();
