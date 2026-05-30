@@ -143,16 +143,22 @@ function setLanguage(lang) {
   showToast(`Idioma cambiado a ${translations[currentLanguage].selectedLanguage}`, 'success');
 }
 
+function getBudgetStorageKey() {
+  return currentUser
+    ? `${STORAGE_BUDGETS_KEY}_${currentUser.toLowerCase()}`
+    : `${STORAGE_BUDGETS_KEY}_guest`;
+}
+
 function loadLocalMirror() {
   try {
-    budgetList = JSON.parse(localStorage.getItem(STORAGE_BUDGETS_KEY) || '[]');
+    budgetList = JSON.parse(localStorage.getItem(getBudgetStorageKey()) || '[]');
   } catch {
     budgetList = [];
   }
 }
 
 function saveLocalMirror() {
-  localStorage.setItem(STORAGE_BUDGETS_KEY, JSON.stringify(budgetList));
+  localStorage.setItem(getBudgetStorageKey(), JSON.stringify(budgetList));
 }
 
 function getUsers() {
@@ -185,9 +191,12 @@ function setAuthMode(mode) {
 function handleSuccessfulLogin(email) {
   currentUser = email;
   localStorage.setItem(STORAGE_SESSION_KEY, email);
+  loadLocalMirror();
+
   if (inputEmail) inputEmail.value = email;
   if (dbStatusLabel) dbStatusLabel.textContent = 'Supabase + Local';
   if (authForm) authForm.reset();
+
   navigateTo('calculatorSection');
   renderHistory();
   showToast(`Bienvenido: ${email}`, 'success');
@@ -535,7 +544,9 @@ function init() {
   btnLogout?.addEventListener('click', (event) => {
     event.preventDefault();
     currentUser = '';
+    budgetList = [];
     localStorage.removeItem(STORAGE_SESSION_KEY);
+    renderHistory();
     navigateTo('landingSection');
     showToast('Sesión cerrada.', 'success');
   });
