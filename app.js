@@ -381,6 +381,19 @@ async function handleBudgetFormSubmit(event) {
   showToast(result.success ? 'Guardado en Supabase correctamente.' : 'Guardado localmente. Revisa Supabase/RLS si no aparece en la nube.', result.success ? 'success' : 'warning');
 }
 
+function drawPdfLogo(doc) {
+  doc.setFillColor(8, 20, 35);
+  doc.circle(22, 21, 12, 'F');
+  doc.setFillColor(0, 198, 255);
+  doc.circle(22, 21, 10, 'F');
+  doc.setFillColor(0, 198, 255);
+  doc.circle(22, 21, 13, 'S');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.text('A', 22, 26, { align: 'center' });
+}
+
 function generatePDF(item) {
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) {
@@ -394,12 +407,9 @@ function generatePDF(item) {
 
   doc.setFillColor(10, 18, 32);
   doc.rect(0, 0, pageWidth, 42, 'F');
-  doc.setFillColor(0, 198, 255);
-  doc.circle(22, 21, 11, 'F');
+  drawPdfLogo(doc);
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('AC', 16, 25);
   doc.setFontSize(21);
   doc.text('AC Manager', 40, 18);
   doc.setFont('helvetica', 'normal');
