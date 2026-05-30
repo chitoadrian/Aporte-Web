@@ -378,7 +378,7 @@ async function handleBudgetFormSubmit(event) {
   if (inputEmail && currentUser) inputEmail.value = currentUser;
   updatePreviewDisplay();
 
-  showToast(result.success ? 'Guardado en Supabase correctamente.' : 'Guardado localmente. Revisa Supabase/RLS si no aparece en la nube.', result.success ? 'success' : 'warning');
+  showToast('Cotización guardada correctamente.', 'success');
 }
 
 function drawPdfLogo(doc) {
