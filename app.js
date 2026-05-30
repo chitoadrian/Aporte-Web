@@ -399,7 +399,28 @@ function drawPdfLogo(doc) {
   doc.text('A', 22, 19.5, { align: 'center' });
 }
 
-function generatePDF(item) {
+function loadLogoForPDF() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      resolve(canvas.toDataURL('image/png'));
+    };
+
+    img.onerror = () => resolve(null);
+    img.src = 'logo.png';
+  });
+}
+
+async function generatePDF(item) {
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) {
     showToast('No se pudo cargar jsPDF.', 'error');
@@ -412,22 +433,13 @@ function generatePDF(item) {
 
   doc.setFillColor(10, 18, 32);
   doc.rect(0, 0, pageWidth, 42, 'F');
+  const logoBase64 = await loadLogoForPDF();
+
+if (logoBase64) {
+  doc.addImage(logoBase64, 'PNG', 12, 8, 96, 22);
+} else {
   drawPdfLogo(doc);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-
-  doc.setTextColor(255, 255, 255);
-  doc.text('AC', 40, 18);
-
-  doc.setTextColor(0, 198, 255);
-  doc.text('Manager', 55, 18);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(180, 190, 205);
-  doc.text('Calculadora de Presupuestos y Servicios Técnicos', 40, 27);
-
+}
   doc.setTextColor(15, 23, 42);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
