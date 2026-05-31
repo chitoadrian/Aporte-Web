@@ -281,10 +281,11 @@ function renderHistory(filter = '') {
   }
 
   bodyHistory.innerHTML = '';
-  items.slice().reverse().forEach((item) => {
+  items.slice().reverse().forEach((item, index) => {
+    const displayId = items.length - index;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>#${String(item.id).slice(-6)}</td>
+      <td>#${displayId}</td>
       <td>${escapeHTML(item.clientName)}</td>
       <td>${escapeHTML(item.deviceModel)}</td>
       <td>${formatCurrency(item.total)}</td>
