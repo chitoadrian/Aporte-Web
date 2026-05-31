@@ -70,66 +70,153 @@ const ivaPercent = $('ivaPercent');
 
 // ========== TEXTOS ==========
 const translations = {
-  es: { selectedLanguage: 'Español', btnEnterAppText: 'Comenzar ahora' },
-  en: { selectedLanguage: 'English', btnEnterAppText: 'Get Started' },
-  pt: { selectedLanguage: 'Português', btnEnterAppText: 'Começar agora' }
-};
+  es: {
+    selectedLanguage: 'Español',
+    btnEnterAppText: 'Comenzar ahora',
+    landingTagline: 'Herramientas Profesionales de Gestión',
+    navFeatures: 'Funciones',
+    navSolutions: 'Soluciones',
+    navBenefits: 'Beneficios',
+    heroBadge: 'Solución Técnica Profesional',
+    heroTitle: 'Gestiona cotizaciones con precisión y diseño corporativo',
+    heroDescription: 'AC Manager es una herramienta pensada para talleres técnicos que necesitan cotizar servicios, controlar costos de repuestos y mantener un historial ordenado y fácil de consultar.',
+    whyTitle: '¿Por qué elegir AC Manager?',
+    costPrecisionTitle: 'Precisión de Costos',
+    costPrecisionDesc: 'Suma automáticamente los repuestos y mano de obra para evitar errores manuales de cálculo.',
+    taxCalcTitle: 'Cálculo de Impuestos',
+    taxCalcDesc: 'Aplica instantáneamente la tasa del IVA del 15% sobre el subtotal de los servicios.',
+    internalDatabaseTitle: 'Base de Datos Interna',
+    internalDatabaseDesc: 'Guarda y persiste los registros del historial mediante el uso inteligente de localStorage.',
+    usageGuideTitle: 'Guía de Uso Rápido',
+    guideStep1Title: 'Accede de forma segura',
+    guideStep1Desc: 'Inicia sesión para ingresar al panel exclusivo de técnicos y trabajar con datos protegidos.',
+    guideStep2Title: 'Ingresa los Datos',
+    guideStep2Desc: 'Escribe el nombre del cliente, dispositivo y costos del servicio técnico.',
+    guideStep3Title: 'Guarda e Historial',
+    guideStep3Desc: 'Visualiza el desglose en tiempo real y guarda la cotización en el historial persistente.',
+    featuresLabel: 'Funciones',
+    featuresHeader: 'Automatiza cada paso de tu flujo de trabajo',
+    feature1Title: 'Registro instantáneo',
+    feature1Desc: 'Guarda presupuestos y consulta el historial con un solo clic.',
+    feature2Title: 'Desglose claro',
+    feature2Desc: 'Visualiza subtotal, IVA y total de forma ordenada.',
+    feature3Title: 'Reportes rápidos',
+    feature3Desc: 'Genera cotizaciones con formato profesional para tus clientes.',
+    feature4Title: 'Control de acceso',
+    feature4Desc: 'La sesión y el historial quedan vinculados al técnico que ingresa.',
+    solutionsLabel: 'Soluciones',
+    solutionsHeader: 'Resuelve problemas reales de tu taller',
+    solutionsDescription: 'AC Manager centraliza tus presupuestos, evita cálculos manuales y reduce tiempos de respuesta al cliente.',
+    solutionItem1: 'Control de inventario básico y costos de repuestos.',
+    solutionItem2: 'Historial accesible para cada presupuesto guardado.',
+    solutionItem3: 'Interfaz clara para técnicos y gerentes.',
+    benefitsLabel: 'Beneficios',
+    benefitsHeader: 'Qué ganas al usar AC Manager'
+  },
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value) || 0);
-}
+  en: {
+    selectedLanguage: 'English',
+    btnEnterAppText: 'Get Started',
+    landingTagline: 'Professional Management Tools',
+    navFeatures: 'Features',
+    navSolutions: 'Solutions',
+    navBenefits: 'Benefits',
+    heroBadge: 'Professional Technical Solution',
+    heroTitle: 'Manage quotes with accuracy and corporate design',
+    heroDescription: 'AC Manager is a tool designed for technical workshops that need to quote services, control spare-part costs, and keep an organized history.',
+    whyTitle: 'Why choose AC Manager?',
+    costPrecisionTitle: 'Cost Accuracy',
+    costPrecisionDesc: 'Automatically adds spare parts and labor costs to avoid manual calculation mistakes.',
+    taxCalcTitle: 'Tax Calculation',
+    taxCalcDesc: 'Instantly applies the 15% VAT rate to the service subtotal.',
+    internalDatabaseTitle: 'Internal Database',
+    internalDatabaseDesc: 'Saves and keeps the quote history using localStorage.',
+    usageGuideTitle: 'Quick Use Guide',
+    guideStep1Title: 'Access securely',
+    guideStep1Desc: 'Log in to enter the technician panel and work with protected data.',
+    guideStep2Title: 'Enter the Data',
+    guideStep2Desc: 'Enter the customer name, device, and technical service costs.',
+    guideStep3Title: 'Save and History',
+    guideStep3Desc: 'View the breakdown in real time and save the quote in the history.',
+    featuresLabel: 'Features',
+    featuresHeader: 'Automate every step of your workflow',
+    feature1Title: 'Instant Record',
+    feature1Desc: 'Save quotes and check the history with one click.',
+    feature2Title: 'Clear Breakdown',
+    feature2Desc: 'View subtotal, VAT, and total in an organized way.',
+    feature3Title: 'Quick Reports',
+    feature3Desc: 'Generate professional quotes for your clients.',
+    feature4Title: 'Access Control',
+    feature4Desc: 'The session and history are linked to the technician who logs in.',
+    solutionsLabel: 'Solutions',
+    solutionsHeader: 'Solve real problems in your workshop',
+    solutionsDescription: 'AC Manager centralizes your quotes, avoids manual calculations, and reduces customer response time.',
+    solutionItem1: 'Basic inventory control and spare-part costs.',
+    solutionItem2: 'Accessible history for every saved quote.',
+    solutionItem3: 'Clear interface for technicians and managers.',
+    benefitsLabel: 'Benefits',
+    benefitsHeader: 'What you gain by using AC Manager'
+  },
 
-function escapeHTML(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
-
-function showToast(message, type = 'info') {
-  const container = $('toastContainer');
-  if (!container) {
-    console.log(`[${type}] ${message}`);
-    return;
+  pt: {
+    selectedLanguage: 'Português',
+    btnEnterAppText: 'Começar agora',
+    landingTagline: 'Ferramentas Profissionais de Gestão',
+    navFeatures: 'Funções',
+    navSolutions: 'Soluções',
+    navBenefits: 'Benefícios',
+    heroBadge: 'Solução Técnica Profissional',
+    heroTitle: 'Gerencie orçamentos com precisão e design corporativo',
+    heroDescription: 'AC Manager é uma ferramenta criada para oficinas técnicas que precisam fazer orçamentos, controlar custos de peças e manter um histórico organizado.',
+    whyTitle: 'Por que escolher o AC Manager?',
+    costPrecisionTitle: 'Precisão de Custos',
+    costPrecisionDesc: 'Soma automaticamente peças e mão de obra para evitar erros de cálculo manual.',
+    taxCalcTitle: 'Cálculo de Impostos',
+    taxCalcDesc: 'Aplica instantaneamente a taxa de IVA de 15% sobre o subtotal dos serviços.',
+    internalDatabaseTitle: 'Banco de Dados Interno',
+    internalDatabaseDesc: 'Salva e mantém o histórico usando localStorage.',
+    usageGuideTitle: 'Guia Rápido de Uso',
+    guideStep1Title: 'Acesse com segurança',
+    guideStep1Desc: 'Faça login para entrar no painel de técnicos e trabalhar com dados protegidos.',
+    guideStep2Title: 'Insira os Dados',
+    guideStep2Desc: 'Digite o nome do cliente, equipamento e custos do serviço técnico.',
+    guideStep3Title: 'Salve e veja o histórico',
+    guideStep3Desc: 'Veja o detalhamento em tempo real e salve o orçamento no histórico.',
+    featuresLabel: 'Funções',
+    featuresHeader: 'Automatize cada etapa do seu fluxo de trabalho',
+    feature1Title: 'Registro instantâneo',
+    feature1Desc: 'Salve orçamentos e consulte o histórico com um clique.',
+    feature2Title: 'Detalhamento claro',
+    feature2Desc: 'Veja subtotal, IVA e total de forma organizada.',
+    feature3Title: 'Relatórios rápidos',
+    feature3Desc: 'Gere orçamentos profissionais para seus clientes.',
+    feature4Title: 'Controle de acesso',
+    feature4Desc: 'A sessão e o histórico ficam ligados ao técnico que entra.',
+    solutionsLabel: 'Soluções',
+    solutionsHeader: 'Resolva problemas reais da sua oficina',
+    solutionsDescription: 'AC Manager centraliza seus orçamentos, evita cálculos manuais e reduz o tempo de resposta ao cliente.',
+    solutionItem1: 'Controle básico de estoque e custos de peças.',
+    solutionItem2: 'Histórico acessível para cada orçamento salvo.',
+    solutionItem3: 'Interface clara para técnicos e gerentes.',
+    benefitsLabel: 'Benefícios',
+    benefitsHeader: 'O que você ganha ao usar AC Manager'
   }
-
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-
-  setTimeout(() => toast.classList.add('show'), 20);
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 250);
-  }, 3000);
-}
-
-function getCurrentFormattedDate() {
-  return new Date().toLocaleString('es-ES');
-}
-
-function calculateAmounts(parts, labor) {
-  const p = Math.max(0, Number(parts) || 0);
-  const l = Math.max(0, Number(labor) || 0);
-  const subtotal = +(p + l).toFixed(2);
-  const iva = +(subtotal * IVA_RATE).toFixed(2);
-  const total = +(subtotal + iva).toFixed(2);
-  return { subtotal, iva, total };
-}
-
-function navigateTo(sectionId) {
-  [landingSection, authSection, calculatorSection].forEach((section) => {
-    if (!section) return;
-    section.classList.toggle('hidden', section.id !== sectionId);
-  });
-}
+};
 
 function updateLanguageDisplay() {
   const data = translations[currentLanguage] || translations.es;
+
   if (selectedLanguageSpan) selectedLanguageSpan.textContent = data.selectedLanguage;
 
   const btnText = $('btnEnterAppText');
   if (btnText) btnText.textContent = data.btnEnterAppText;
+
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    const key = element.dataset.i18n;
+    if (data[key]) {
+      element.textContent = data[key];
+    }
+  });
 
   document.querySelectorAll('.language-option').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
