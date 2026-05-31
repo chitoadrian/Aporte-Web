@@ -75,32 +75,61 @@ const translations = {
   pt: { selectedLanguage: 'Português', btnEnterAppText: 'Começar agora' }
 };
 
-function updateLanguageDisplay() {
-  const data = translations[currentLanguage] || translations.es;
-  if (selectedLanguageSpan) selectedLanguageSpan.textContent = data.selectedLanguage;
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value) || 0);
+}
 
-  const btnText = $('btnEnterAppText');
-  if (btnText) btnText.textContent = data.btnEnterAppText;
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
 
-  document.querySelectorAll('.language-option').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
+function showToast(message, type = 'info') {
+  const container = $('toastContainer');
+  if (!container) {
+    console.log(`[${type}] ${message}`);
+    return;
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => toast.classList.add('show'), 20);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 250);
+  }, 3000);
+}
+
+function getCurrentFormattedDate() {
+  return new Date().toLocaleString('es-ES');
+}
+
+function calculateAmounts(parts, labor) {
+  const p = Math.max(0, Number(parts) || 0);
+  const l = Math.max(0, Number(labor) || 0);
+  const subtotal = +(p + l).toFixed(2);
+  const iva = +(subtotal * IVA_RATE).toFixed(2);
+  const total = +(subtotal + iva).toFixed(2);
+  return { subtotal, iva, total };
+}
+
+function navigateTo(sectionId) {
+  [landingSection, authSection, calculatorSection].forEach((section) => {
+    if (!section) return;
+    section.classList.toggle('hidden', section.id !== sectionId);
   });
 }
 
 function updateLanguageDisplay() {
   const data = translations[currentLanguage] || translations.es;
-
   if (selectedLanguageSpan) selectedLanguageSpan.textContent = data.selectedLanguage;
 
   const btnText = $('btnEnterAppText');
   if (btnText) btnText.textContent = data.btnEnterAppText;
-
-  document.querySelectorAll('[data-i18n]').forEach((element) => {
-    const key = element.dataset.i18n;
-    if (data[key]) {
-      element.textContent = data[key];
-    }
-  });
 
   document.querySelectorAll('.language-option').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.lang === currentLanguage);
