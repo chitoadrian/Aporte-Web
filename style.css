@@ -1913,3 +1913,179 @@ tr:hover td {
   transform: translateY(-1px);
   background: rgba(0, 198, 255, 0.18);
 }
+
+/* ==========================================================================
+   MODO CLARO - AC MANAGER
+   ========================================================================== */
+
+:root {
+  --bg-main: #f4f7fb;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-muted: #5b6472;
+  --text-disabled: #9ca3af;
+  --bg-input: #f8fafc;
+  --border-color: #dbe3ef;
+  --cyan-glow: rgba(0, 198, 255, 0.14);
+  --orange-glow: rgba(255, 106, 0, 0.12);
+  --bg-gradient: linear-gradient(135deg, #f4f7fb 0%, #eaf2ff 100%);
+  --shadow-premium: 0 18px 45px rgba(15, 23, 42, 0.12);
+}
+
+body {
+  background-color: var(--bg-main) !important;
+  background-image: var(--bg-gradient) !important;
+  color: var(--text-primary) !important;
+}
+
+body::before {
+  background-image: radial-gradient(rgba(0, 94, 170, 0.08) 1px, transparent 0) !important;
+}
+
+.app-container {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 24px 65px rgba(15, 23, 42, 0.12) !important;
+}
+
+.app-header,
+.card,
+.card-info-landing,
+.guide-block,
+.extra-section,
+.feature-card,
+.visual-card,
+.benefit-card,
+.auth-card,
+.calculator-card,
+.history-card,
+.summary-card,
+.form-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08) !important;
+}
+
+.landing-nav a {
+  background: rgba(0, 94, 170, 0.06) !important;
+  color: #334155 !important;
+}
+
+.landing-nav a:hover {
+  background: rgba(0, 198, 255, 0.14) !important;
+  color: #0f172a !important;
+}
+
+.logo-text h1,
+.hero-block h2,
+.card h3,
+.guide-block h3,
+.extra-section h3,
+.feature-card h4,
+.benefit-card h4,
+.auth-card h2,
+.calculator-card h2,
+.history-card h2,
+.summary-card h2,
+label {
+  color: #0f172a !important;
+}
+
+.logo-text .tagline,
+.hero-description,
+.card p,
+.guide-block p,
+.extra-section p,
+.feature-card p,
+.benefit-card p,
+.auth-card p,
+.history-card p,
+.form-help,
+small {
+  color: #64748b !important;
+}
+
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #00aeea !important;
+  box-shadow: 0 0 0 3px rgba(0, 198, 255, 0.16) !important;
+}
+
+table {
+  color: #0f172a !important;
+}
+
+thead,
+thead tr,
+th {
+  background: #eaf2ff !important;
+  color: #0f172a !important;
+  border-color: #dbeafe !important;
+}
+
+tbody tr,
+td {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #e2e8f0 !important;
+}
+
+tbody tr:hover td {
+  background: #f1f7ff !important;
+}
+
+.records-badge,
+.badge-accent,
+.section-label,
+.system-status {
+  background: rgba(0, 198, 255, 0.12) !important;
+  border-color: rgba(0, 198, 255, 0.25) !important;
+  color: #005eaa !important;
+}
+
+.btn,
+button[type="submit"],
+.btn-primary,
+.btn-secondary {
+  box-shadow: 0 10px 25px rgba(0, 94, 170, 0.18) !important;
+}
+
+.icon-btn {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 94, 170, 0.18) !important;
+  color: #005eaa !important;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 198, 255, 0.14) !important;
+}
+
+.toast {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ef !important;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16) !important;
+}
+
+.page-loader {
+  background: rgba(244, 247, 251, 0.88) !important;
+}
+
+.loader-text {
+  color: #0f172a !important;
+}
