@@ -2,108 +2,74 @@
 
 ## Nombre del proyecto
 
-**CotizaAPI Global - Sistema de cotizaciones con integracion de 3 APIs**
+**CotizaAPI Global - Sistema de cotizaciones con integración de 3 APIs**
 
 ## Problema que resuelve
 
-CotizaAPI Global permite crear cotizaciones para productos o servicios calculando precio, mano de obra, IVA, subtotal y total. Tambien complementa cada cotizacion con informacion internacional util para clientes: datos del pais, clima por ciudad y conversion del total desde USD a otra moneda.
+CotizaAPI Global permite crear cotizaciones para productos o servicios calculando precio, mano de obra, IVA, subtotal y total. También complementa cada cotización con información internacional útil para clientes: datos del país, clima por ciudad y conversión del total desde USD a otra moneda.
 
 El proyecto mantiene:
 
 - Ingreso de precio del producto o servicio.
 - Ingreso de mano de obra.
-- Calculo de IVA, subtotal y total.
+- Cálculo de IVA, subtotal y total.
 - Historial de cotizaciones.
-- Descarga de PDF.
-- Guardado en Supabase cuando la base de datos esta disponible.
+- Descarga de PDF con datos de cotización y datos de las 3 APIs.
+- Guardado en Supabase cuando la base de datos está disponible.
 
 ## APIs usadas
 
 ### 1. REST Countries
 
-Endpoint usado:
+Función dentro del proyecto:
 
-```text
-https://api.restcountries.com/countries/v5/name?q={pais}
-```
-
-Funcion dentro del proyecto:
-
-- Permite escribir un pais.
-- Muestra bandera.
-- Muestra moneda.
-- Muestra idioma.
-
-Configuracion:
-
-En `app.js` se deja preparada la constante:
-
-```js
-const REST_COUNTRIES_API_KEY = "rc_live_demo";
-```
-
-La clave demo oficial permite probar la forma de la respuesta. Para datos completos en produccion, reemplaza `rc_live_demo` por una clave real de REST Countries.
+- Permite escribir un país con autocomplete.
+- Acepta nombres parciales y nombres en español, por ejemplo España o egi.
+- Muestra bandera, moneda e idioma.
 
 ### 2. OpenWeather
 
-Endpoint usado:
-
-```text
-https://api.openweathermap.org/data/2.5/weather
-```
-
-Funcion dentro del proyecto:
+Función dentro del proyecto:
 
 - Permite escribir una ciudad.
-- Muestra temperatura.
-- Muestra humedad.
-- Muestra descripcion del clima.
+- Muestra temperatura, humedad y descripción del clima.
+- Si no hay clave configurada, muestra un mensaje claro sin romper la interfaz.
 
-Configuracion:
-
-En `app.js` se deja preparada la constante:
+Configuración en `app.js`:
 
 ```js
-const WEATHER_API_KEY = "TU_API_KEY_AQUI";
+const WEATHER_API_KEY = "PEGA_AQUI_TU_API_KEY_REAL";
 ```
 
-Para usar OpenWeather, reemplaza `TU_API_KEY_AQUI` por una clave real de OpenWeather.
+Para usar OpenWeather, reemplaza `PEGA_AQUI_TU_API_KEY_REAL` por una clave real de OpenWeather.
 
 ### 3. ExchangeRate API
 
-Endpoint usado:
+Función dentro del proyecto:
 
-```text
-https://open.er-api.com/v6/latest/USD
-```
-
-Funcion dentro del proyecto:
-
-- Toma el total de la cotizacion en USD.
-- Permite escribir una moneda destino, por ejemplo `EUR`, `COP` o `MXN`.
+- Toma el total de la cotización en USD.
+- Permite escribir o seleccionar una moneda destino, por ejemplo `EUR`, `COP` o `MXN`.
 - Convierte el total usando la tasa de cambio actual.
 
-## Como ejecutar el proyecto
+## Manejo de errores
 
-Este proyecto es una pagina web estatica con HTML, CSS y JavaScript.
+Las consultas se realizan con `fetch`, `async/await` y `try/catch`. Los errores genéricos de conexión se muestran al usuario como mensajes claros, por ejemplo:
+
+- No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.
+- No se encontró ese país. Prueba con otro nombre.
+- Configura WEATHER_API_KEY para consultar el clima.
+
+## Cómo ejecutar el proyecto
+
+Este proyecto es una página web estática con HTML, CSS y JavaScript.
 
 1. Descarga o clona el repositorio.
 2. Abre `index.html` en el navegador.
-3. Crea una cuenta local o inicia sesion si ya existe.
-4. Ingresa los datos de la cotizacion.
-5. Usa el panel **APIs Globales** para consultar pais, clima y conversion de moneda.
-6. Guarda la cotizacion y descarga el PDF desde el historial.
+3. Crea una cuenta local o inicia sesión si ya existe.
+4. Ingresa los datos de la cotización.
+5. Usa el panel **APIs Globales** para consultar país, clima y conversión de moneda.
+6. Guarda la cotización y descarga el PDF desde el historial.
 
 ## Link del deploy
 
-Repositorio:
-
-```text
-https://github.com/chitoadrian/Aporte-Web
-```
-
-Deploy:
-
-```text
-Agrega aqui el enlace publico de GitHub Pages, Vercel o Netlify cuando este publicado.
-```
+Agrega aquí el enlace público de GitHub Pages, Vercel o Netlify cuando esté publicado.
