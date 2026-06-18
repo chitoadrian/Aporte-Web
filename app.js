@@ -16,6 +16,31 @@ const REST_COUNTRIES_API_KEY = "rc_live_demo";
 const WEATHER_API_KEY = "TU_API_KEY_AQUI";
 const EXCHANGE_RATE_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
+const COUNTRY_CATALOG = [
+  { es: 'Espana', en: 'Spain', code: 'ES', currency: 'EUR - Euro', language: 'Espanol', aliases: ['espana', 'españa', 'spain', 'reino de espana'], flag: 'https://flagcdn.com/w80/es.png' },
+  { es: 'Egipto', en: 'Egypt', code: 'EG', currency: 'EGP - Libra egipcia', language: 'Arabe', aliases: ['egipto', 'egypt', 'republica arabe de egipto'], flag: 'https://flagcdn.com/w80/eg.png' },
+  { es: 'Ecuador', en: 'Ecuador', code: 'EC', currency: 'USD - Dolar estadounidense', language: 'Espanol', aliases: ['ecuador', 'republica del ecuador'], flag: 'https://flagcdn.com/w80/ec.png' },
+  { es: 'Colombia', en: 'Colombia', code: 'CO', currency: 'COP - Peso colombiano', language: 'Espanol', aliases: ['colombia', 'republica de colombia'], flag: 'https://flagcdn.com/w80/co.png' },
+  { es: 'Peru', en: 'Peru', code: 'PE', currency: 'PEN - Sol peruano', language: 'Espanol', aliases: ['peru', 'perú'], flag: 'https://flagcdn.com/w80/pe.png' },
+  { es: 'Mexico', en: 'Mexico', code: 'MX', currency: 'MXN - Peso mexicano', language: 'Espanol', aliases: ['mexico', 'méxico'], flag: 'https://flagcdn.com/w80/mx.png' },
+  { es: 'Estados Unidos', en: 'United States', code: 'US', currency: 'USD - Dolar estadounidense', language: 'Ingles', aliases: ['estados unidos', 'usa', 'united states'], flag: 'https://flagcdn.com/w80/us.png' },
+  { es: 'Canada', en: 'Canada', code: 'CA', currency: 'CAD - Dolar canadiense', language: 'Ingles, Frances', aliases: ['canada', 'canadá'], flag: 'https://flagcdn.com/w80/ca.png' },
+  { es: 'Brasil', en: 'Brazil', code: 'BR', currency: 'BRL - Real brasileno', language: 'Portugues', aliases: ['brasil', 'brazil'], flag: 'https://flagcdn.com/w80/br.png' },
+  { es: 'Argentina', en: 'Argentina', code: 'AR', currency: 'ARS - Peso argentino', language: 'Espanol', aliases: ['argentina'], flag: 'https://flagcdn.com/w80/ar.png' },
+  { es: 'Chile', en: 'Chile', code: 'CL', currency: 'CLP - Peso chileno', language: 'Espanol', aliases: ['chile'], flag: 'https://flagcdn.com/w80/cl.png' },
+  { es: 'Francia', en: 'France', code: 'FR', currency: 'EUR - Euro', language: 'Frances', aliases: ['francia', 'france'], flag: 'https://flagcdn.com/w80/fr.png' },
+  { es: 'Alemania', en: 'Germany', code: 'DE', currency: 'EUR - Euro', language: 'Aleman', aliases: ['alemania', 'germany', 'deutschland'], flag: 'https://flagcdn.com/w80/de.png' },
+  { es: 'Italia', en: 'Italy', code: 'IT', currency: 'EUR - Euro', language: 'Italiano', aliases: ['italia', 'italy'], flag: 'https://flagcdn.com/w80/it.png' },
+  { es: 'Reino Unido', en: 'United Kingdom', code: 'GB', currency: 'GBP - Libra esterlina', language: 'Ingles', aliases: ['reino unido', 'uk', 'united kingdom'], flag: 'https://flagcdn.com/w80/gb.png' },
+  { es: 'Portugal', en: 'Portugal', code: 'PT', currency: 'EUR - Euro', language: 'Portugues', aliases: ['portugal'], flag: 'https://flagcdn.com/w80/pt.png' },
+  { es: 'Bolivia', en: 'Bolivia', code: 'BO', currency: 'BOB - Boliviano', language: 'Espanol', aliases: ['bolivia'], flag: 'https://flagcdn.com/w80/bo.png' },
+  { es: 'Uruguay', en: 'Uruguay', code: 'UY', currency: 'UYU - Peso uruguayo', language: 'Espanol', aliases: ['uruguay'], flag: 'https://flagcdn.com/w80/uy.png' },
+  { es: 'Paraguay', en: 'Paraguay', code: 'PY', currency: 'PYG - Guarani paraguayo', language: 'Espanol, Guarani', aliases: ['paraguay'], flag: 'https://flagcdn.com/w80/py.png' },
+  { es: 'Japon', en: 'Japan', code: 'JP', currency: 'JPY - Yen japones', language: 'Japones', aliases: ['japon', 'japón', 'japan'], flag: 'https://flagcdn.com/w80/jp.png' }
+];
+const CITY_SUGGESTIONS = ['Quito', 'Guayaquil', 'Cuenca', 'Madrid', 'Bogota', 'Lima'];
+const COMMON_CURRENCIES = ['USD', 'EUR', 'COP', 'MXN', 'PEN', 'CLP', 'ARS', 'BRL', 'GBP', 'CAD', 'JPY'];
+
 let budgetList = [];
 let authMode = 'login';
 let currentUser = localStorage.getItem(STORAGE_SESSION_KEY) || '';
@@ -23,6 +48,8 @@ let currentCountryInfo = null;
 let currentWeatherInfo = null;
 let currentExchangeInfo = null;
 let latestQuoteTotals = { subtotal: 0, iva: 0, total: 0 };
+let exchangeRatesCache = null;
+let countrySuggestionTimer = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -72,6 +99,10 @@ function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[char]));
+}
+
+function normalizeText(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 
 function showToast(message, type = 'info') {
@@ -169,7 +200,7 @@ function injectGlobalApiStyles() {
   if ($('globalApisStyles')) return;
   const style = document.createElement('style');
   style.id = 'globalApisStyles';
-  style.textContent = `.global-apis-card{margin-top:1.5rem}.api-grid{display:grid;gap:1rem}.api-tool{padding:1rem;border:1px solid rgba(0,198,255,.14);border-radius:var(--radius-md);background:rgba(0,242,254,.04)}.api-tool h3{font-size:1rem;margin-bottom:.35rem}.api-tool p{color:var(--text-muted);font-size:.84rem;margin-bottom:.8rem}.api-input-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem;align-items:center}.api-input-row input{width:100%;padding:.8rem .95rem;background:var(--bg-input);border:1.5px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:.9rem}.btn-api{border:0;border-radius:var(--radius-md);background:var(--cyan-gradient);color:#000;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:800;padding:.8rem .95rem;white-space:nowrap}.btn-api:hover{filter:brightness(1.06);transform:translateY(-1px)}.api-result{display:grid;gap:.2rem;margin-top:.85rem;padding:.85rem;border-radius:var(--radius-md);background:rgba(255,255,255,.04);color:var(--text-muted);font-size:.84rem}.api-result strong,.api-result span{display:block}.api-result-success{border:1px solid rgba(0,198,255,.22);color:var(--text-primary)}.api-result-error{border:1px solid rgba(255,106,0,.28);color:var(--accent-orange)}.api-result-loading{border:1px solid rgba(0,198,255,.2);color:var(--accent-cyan)}.country-result{display:grid;grid-template-columns:54px 1fr;gap:.75rem;align-items:center}.country-result img{width:54px;height:36px;object-fit:cover;border-radius:6px;border:1px solid rgba(15,23,42,.12)}@media(max-width:520px){.api-input-row{grid-template-columns:1fr}}`;
+  style.textContent = `.global-apis-card{margin-top:1.5rem}.api-grid{display:grid;gap:1rem}.api-tool{position:relative;padding:1rem;border:1px solid rgba(0,198,255,.14);border-radius:var(--radius-md);background:linear-gradient(135deg,rgba(0,242,254,.055),rgba(255,255,255,.025));box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}.api-tool h3{font-size:1rem;margin-bottom:.35rem}.api-tool p{color:var(--text-muted);font-size:.84rem;margin-bottom:.8rem}.api-input-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem;align-items:center;position:relative}.api-input-row input{width:100%;padding:.8rem .95rem;background:var(--bg-input);border:1.5px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:.9rem}.api-input-row input:focus{outline:none;border-color:rgba(0,242,254,.68);box-shadow:0 0 0 4px rgba(0,242,254,.08)}.btn-api{border:0;border-radius:var(--radius-md);background:var(--cyan-gradient);color:#000;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:800;padding:.8rem .95rem;white-space:nowrap}.btn-api:hover{filter:brightness(1.06);transform:translateY(-1px)}.api-result{display:grid;gap:.2rem;margin-top:.85rem;padding:.85rem;border-radius:var(--radius-md);background:rgba(255,255,255,.04);color:var(--text-muted);font-size:.84rem;line-height:1.5}.api-result strong,.api-result span{display:block}.api-result-success{border:1px solid rgba(0,198,255,.22);color:var(--text-primary)}.api-result-error{border:1px solid rgba(255,106,0,.34);background:rgba(255,106,0,.08);color:#ffc08a}.api-result-info{border:1px solid rgba(0,198,255,.18);color:var(--text-muted)}.api-result-loading{border:1px solid rgba(0,198,255,.26);color:var(--accent-cyan);position:relative;overflow:hidden}.api-result-loading:after{content:"";height:2px;width:44%;position:absolute;left:-44%;bottom:0;background:var(--cyan-gradient);animation:apiLoading 1.1s ease-in-out infinite}@keyframes apiLoading{to{left:100%}}.country-result{display:grid;grid-template-columns:54px 1fr;gap:.75rem;align-items:center}.country-result img{width:54px;height:36px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.16)}.api-suggestions{display:none;position:absolute;z-index:25;left:0;right:0;top:calc(100% + 6px);max-height:230px;overflow:auto;padding:.35rem;border:1px solid rgba(0,198,255,.22);border-radius:var(--radius-md);background:#181818;box-shadow:0 18px 42px rgba(0,0,0,.38)}.api-suggestions.show{display:grid;gap:.25rem}.suggestion-item{display:grid;grid-template-columns:auto 1fr auto;gap:.65rem;align-items:center;width:100%;border:0;border-radius:8px;padding:.58rem .65rem;background:transparent;color:var(--text-primary);font-family:inherit;text-align:left;cursor:pointer}.suggestion-item:hover,.suggestion-item:focus{outline:none;background:rgba(0,242,254,.1)}.suggestion-flag{width:32px;height:22px;object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,.12)}.suggestion-code{font-weight:800;color:var(--accent-cyan);font-size:.78rem}.city-chips{display:flex;flex-wrap:wrap;gap:.45rem;margin:.6rem 0 .2rem}.city-chip{border:1px solid rgba(0,198,255,.22);border-radius:999px;background:rgba(0,242,254,.06);color:var(--text-primary);cursor:pointer;font-family:inherit;font-size:.78rem;padding:.38rem .62rem}.city-chip:hover{background:rgba(0,242,254,.14);border-color:rgba(0,242,254,.48)}@media(max-width:520px){.api-input-row{grid-template-columns:1fr}.api-suggestions{top:48px}.btn-api{width:100%}}`;
   document.head.appendChild(style);
 }
 
@@ -203,8 +234,111 @@ function injectGlobalApisPanel() {
   const card = document.createElement('div');
   card.className = 'card card-form global-apis-card';
   card.id = 'globalApisCard';
-  card.innerHTML = `<div class="card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-header-icon"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg><h2>APIs Globales</h2></div><div class="api-grid"><section class="api-tool"><h3>Pais</h3><p>Consulta bandera, moneda e idioma con REST Countries.</p><div class="api-input-row"><input type="text" id="countryInput" placeholder="Ej. Ecuador"><button type="button" id="btnCountryApi" class="btn-api">Buscar</button></div><div id="countryResult" class="api-result">Sin consulta.</div></section><section class="api-tool"><h3>Clima</h3><p>Consulta temperatura, humedad y descripcion con OpenWeather.</p><div class="api-input-row"><input type="text" id="weatherCityInput" placeholder="Ej. Quito"><button type="button" id="btnWeatherApi" class="btn-api">Ver clima</button></div><div id="weatherResult" class="api-result">Configura WEATHER_API_KEY para consultar.</div></section><section class="api-tool"><h3>Moneda</h3><p>Convierte el total de USD a otra moneda con ExchangeRate API.</p><div class="api-input-row"><input type="text" id="currencyInput" placeholder="EUR, COP, MXN" maxlength="3"><button type="button" id="btnExchangeApi" class="btn-api">Convertir</button></div><div id="exchangeResult" class="api-result">Ingresa una moneda para convertir.</div></section></div>`;
+  card.innerHTML = `<div class="card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="card-header-icon"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg><h2>APIs Globales</h2></div><div class="api-grid"><section class="api-tool"><h3>Pais</h3><p>Consulta bandera, moneda e idioma con REST Countries. Puedes escribir nombres en espanol o parciales.</p><div class="api-input-row"><input type="text" id="countryInput" placeholder="Ej. Espana o egi" autocomplete="off"><button type="button" id="btnCountryApi" class="btn-api">Buscar</button><div id="countrySuggestions" class="api-suggestions"></div></div><div id="countryResult" class="api-result api-result-info">Escribe 2 o mas letras para ver sugerencias.</div></section><section class="api-tool"><h3>Clima</h3><p>Consulta temperatura, humedad y descripcion con OpenWeather.</p><div class="api-input-row"><input type="text" id="weatherCityInput" placeholder="Ej. Quito" autocomplete="off"><button type="button" id="btnWeatherApi" class="btn-api">Ver clima</button><div id="citySuggestions" class="api-suggestions"></div></div><div id="cityChips" class="city-chips"></div><div id="weatherResult" class="api-result api-result-info">Configura WEATHER_API_KEY para consultar el clima.</div></section><section class="api-tool"><h3>Moneda</h3><p>Convierte el total de USD a otra moneda con ExchangeRate API.</p><div class="api-input-row"><input type="text" id="currencyInput" placeholder="EUR, COP, MXN" maxlength="3" autocomplete="off"><button type="button" id="btnExchangeApi" class="btn-api">Convertir</button><div id="currencySuggestions" class="api-suggestions"></div></div><div id="exchangeResult" class="api-result api-result-info">Primero calcula una cotizacion para convertir el total.</div></section></div>`;
   formSection.appendChild(card);
+}
+
+function catalogMatches(query) {
+  const normalized = normalizeText(query);
+  if (normalized.length < 2) return [];
+  return COUNTRY_CATALOG.filter((country) => {
+    const values = [country.es, country.en, country.code, ...(country.aliases || [])].map(normalizeText);
+    return values.some((value) => value.includes(normalized));
+  });
+}
+
+function mapCountryFromCatalog(country) {
+  return {
+    name: country.es,
+    officialName: country.en,
+    code: country.code,
+    flag: country.flag,
+    currencies: country.currency,
+    languages: country.language
+  };
+}
+
+function mapCountryFromApi(country, fallbackName = '') {
+  const code = country.codes?.cca2 || country.codes?.cca3 || country.cca2 || '';
+  const currencyEntries = Object.entries(country.currencies || {});
+  const currencies = currencyEntries.map(([codeKey, item]) => `${codeKey} - ${item.name || 'Moneda'}`).join(', ') || 'No disponible';
+  const languages = Object.values(country.languages || {}).map((item) => item.name || item).join(', ') || 'No disponible';
+  return {
+    name: country.names?.common || country.name?.common || fallbackName,
+    officialName: country.names?.official || country.name?.official || '',
+    code,
+    flag: country.assets?.flag_png || country.assets?.flag_svg || country.flags?.png || country.flags?.svg || '',
+    currencies,
+    languages
+  };
+}
+
+async function fetchCountryCandidates(query) {
+  try {
+    const url = `https://api.restcountries.com/countries/v5/name?q=${encodeURIComponent(query)}&api-key=${REST_COUNTRIES_API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('api');
+    const data = await response.json();
+    const objects = data?.data?.objects || data || [];
+    if (!Array.isArray(objects)) return [];
+    const normalized = normalizeText(query);
+    return objects.map((country) => mapCountryFromApi(country, query)).filter((country) => {
+      const values = [country.name, country.officialName, country.code].map(normalizeText);
+      return values.some((value) => value.includes(normalized));
+    });
+  } catch {
+    return [];
+  }
+}
+
+function renderCountrySuggestions(items) {
+  const list = $('countrySuggestions');
+  if (!list) return;
+  if (!items.length) {
+    list.classList.remove('show');
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = items.slice(0, 8).map((country) => `<button type="button" class="suggestion-item" data-country="${escapeHTML(country.name)}"><img class="suggestion-flag" src="${escapeHTML(country.flag)}" alt=""><span>${escapeHTML(country.name)}</span><span class="suggestion-code">${escapeHTML(country.code)}</span></button>`).join('');
+  list.classList.add('show');
+  list.querySelectorAll('.suggestion-item').forEach((button) => {
+    button.addEventListener('click', () => selectCountrySuggestion(button.dataset.country || ''));
+  });
+}
+
+function hideSuggestions(id) {
+  const list = $(id);
+  if (!list) return;
+  list.classList.remove('show');
+}
+
+async function updateCountryAutocomplete() {
+  const query = ($('countryInput')?.value || '').trim();
+  if (query.length < 2) {
+    renderCountrySuggestions([]);
+    return;
+  }
+  const local = catalogMatches(query).map(mapCountryFromCatalog);
+  renderCountrySuggestions(local);
+  const remote = await fetchCountryCandidates(query);
+  const merged = [...local];
+  remote.forEach((country) => {
+    if (!merged.some((item) => item.code && item.code === country.code)) merged.push(country);
+  });
+  renderCountrySuggestions(merged);
+}
+
+async function selectCountrySuggestion(countryName) {
+  const input = $('countryInput');
+  if (input) input.value = countryName;
+  hideSuggestions('countrySuggestions');
+  await fetchCountryInfo();
+}
+
+function renderCountryInfo(info) {
+  currentCountryInfo = info;
+  const flagMarkup = info.flag ? `<img src="${escapeHTML(info.flag)}" alt="Bandera de ${escapeHTML(info.name)}">` : '';
+  setApiResult('countryResult', `<div class="country-result">${flagMarkup}<div><strong>${escapeHTML(info.name)} ${info.code ? `(${escapeHTML(info.code)})` : ''}</strong><span>Moneda: ${escapeHTML(info.currencies)}</span><span>Idioma: ${escapeHTML(info.languages)}</span></div></div>`, 'success');
 }
 
 async function fetchCountryInfo() {
@@ -212,64 +346,141 @@ async function fetchCountryInfo() {
   if (!query) return showToast('Escribe un pais para consultar.', 'error');
   setApiResult('countryResult', 'Consultando pais...', 'loading');
   try {
-    const url = `https://api.restcountries.com/countries/v5/name?q=${encodeURIComponent(query)}&api-key=${REST_COUNTRIES_API_KEY}`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('No se encontro informacion del pais.');
-    const data = await response.json();
-    const country = data?.data?.objects?.[0];
-    if (!country) throw new Error('No se encontro informacion del pais.');
-    const currencies = Object.entries(country.currencies || {}).map(([code, item]) => `${code} - ${item.name || 'Moneda'}`).join(', ') || 'No disponible';
-    const languages = Object.values(country.languages || {}).map((item) => item.name || item).join(', ') || 'No disponible';
-    currentCountryInfo = {
-      name: country.names?.common || query,
-      officialName: country.names?.official || '',
-      flag: country.assets?.flag_png || country.assets?.flag_svg || '',
-      currencies,
-      languages
-    };
-    const flagMarkup = currentCountryInfo.flag ? `<img src="${currentCountryInfo.flag}" alt="Bandera de ${escapeHTML(currentCountryInfo.name)}">` : '';
-    setApiResult('countryResult', `<div class="country-result">${flagMarkup}<div><strong>${escapeHTML(currentCountryInfo.name)}</strong><span>Moneda: ${escapeHTML(currentCountryInfo.currencies)}</span><span>Idioma: ${escapeHTML(currentCountryInfo.languages)}</span></div></div>`, 'success');
-    showToast('Datos del pais cargados.', 'success');
-  } catch (error) {
+    const localExact = catalogMatches(query).find((country) => {
+      const normalized = normalizeText(query);
+      return [country.es, country.en, country.code, ...(country.aliases || [])].map(normalizeText).includes(normalized);
+    });
+    const localMatch = localExact || catalogMatches(query)[0];
+    if (localMatch) {
+      renderCountryInfo(mapCountryFromCatalog(localMatch));
+      showToast('Datos del pais cargados.', 'success');
+      return;
+    }
+    const remote = await fetchCountryCandidates(query);
+    if (remote.length) {
+      renderCountryInfo(remote[0]);
+      showToast('Datos del pais cargados.', 'success');
+      return;
+    }
     currentCountryInfo = null;
-    setApiResult('countryResult', escapeHTML(error.message || 'Error al consultar REST Countries.'), 'error');
-    showToast('No se pudo consultar el pais.', 'error');
+    setApiResult('countryResult', 'No se encontro ese pais. Prueba con otro nombre.', 'error');
+    showToast('No se encontro ese pais. Prueba con otro nombre.', 'error');
+  } catch {
+    currentCountryInfo = null;
+    setApiResult('countryResult', 'No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.', 'error');
+    showToast('No se pudo conectar con la API.', 'error');
   }
+}
+
+function renderCityChips() {
+  const container = $('cityChips');
+  if (!container) return;
+  container.innerHTML = CITY_SUGGESTIONS.map((city) => `<button type="button" class="city-chip" data-city="${escapeHTML(city)}">${escapeHTML(city)}</button>`).join('');
+  container.querySelectorAll('.city-chip').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = $('weatherCityInput');
+      if (input) input.value = button.dataset.city || '';
+      hideSuggestions('citySuggestions');
+    });
+  });
+}
+
+function renderCitySuggestions() {
+  const query = normalizeText($('weatherCityInput')?.value || '');
+  const list = $('citySuggestions');
+  if (!list || query.length < 2) {
+    hideSuggestions('citySuggestions');
+    return;
+  }
+  const matches = CITY_SUGGESTIONS.filter((city) => normalizeText(city).includes(query));
+  if (!matches.length) {
+    hideSuggestions('citySuggestions');
+    return;
+  }
+  list.innerHTML = matches.map((city) => `<button type="button" class="suggestion-item" data-city="${escapeHTML(city)}"><span></span><span>${escapeHTML(city)}</span><span class="suggestion-code">CIUDAD</span></button>`).join('');
+  list.classList.add('show');
+  list.querySelectorAll('.suggestion-item').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = $('weatherCityInput');
+      if (input) input.value = button.dataset.city || '';
+      hideSuggestions('citySuggestions');
+    });
+  });
 }
 
 async function fetchWeatherInfo() {
   const city = ($('weatherCityInput')?.value || '').trim();
   if (!city) return showToast('Escribe una ciudad para consultar el clima.', 'error');
   if (!WEATHER_API_KEY || WEATHER_API_KEY === 'TU_API_KEY_AQUI') {
-    setApiResult('weatherResult', 'Configura WEATHER_API_KEY en app.js para usar OpenWeather.', 'error');
-    return showToast('Falta configurar WEATHER_API_KEY.', 'error');
+    setApiResult('weatherResult', 'Configura WEATHER_API_KEY para consultar el clima.', 'info');
+    showToast('Configura WEATHER_API_KEY para consultar el clima.', 'info');
+    return;
   }
   setApiResult('weatherResult', 'Consultando clima...', 'loading');
   try {
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${WEATHER_API_KEY}&units=metric&lang=es`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('No se pudo obtener el clima de esa ciudad.');
+    if (!response.ok) throw new Error('No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.');
     const data = await response.json();
     currentWeatherInfo = { city: data.name || city, temperature: Math.round(data.main?.temp ?? 0), humidity: data.main?.humidity ?? 0, description: data.weather?.[0]?.description || 'No disponible' };
     setApiResult('weatherResult', `<strong>${escapeHTML(currentWeatherInfo.city)}</strong><span>Temperatura: ${currentWeatherInfo.temperature} C</span><span>Humedad: ${currentWeatherInfo.humidity}%</span><span>Clima: ${escapeHTML(currentWeatherInfo.description)}</span>`, 'success');
     showToast('Datos del clima cargados.', 'success');
   } catch (error) {
     currentWeatherInfo = null;
-    setApiResult('weatherResult', escapeHTML(error.message || 'Error al consultar OpenWeather.'), 'error');
+    setApiResult('weatherResult', escapeHTML(error.message || 'No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.'), 'error');
     showToast('No se pudo consultar el clima.', 'error');
   }
 }
 
+function renderCurrencySuggestions() {
+  const input = $('currencyInput');
+  const list = $('currencySuggestions');
+  if (!input || !list) return;
+  input.value = input.value.toUpperCase();
+  const query = normalizeText(input.value);
+  if (!query.length) {
+    hideSuggestions('currencySuggestions');
+    return;
+  }
+  const matches = COMMON_CURRENCIES.filter((code) => code.toLowerCase().includes(query)).slice(0, 8);
+  if (!matches.length) {
+    hideSuggestions('currencySuggestions');
+    return;
+  }
+  list.innerHTML = matches.map((code) => `<button type="button" class="suggestion-item" data-currency="${code}"><span></span><span>${code}</span><span class="suggestion-code">MONEDA</span></button>`).join('');
+  list.classList.add('show');
+  list.querySelectorAll('.suggestion-item').forEach((button) => {
+    button.addEventListener('click', () => {
+      input.value = (button.dataset.currency || '').toUpperCase();
+      hideSuggestions('currencySuggestions');
+    });
+  });
+}
+
+async function getExchangeRates() {
+  if (exchangeRatesCache?.rates) return exchangeRatesCache.rates;
+  const response = await fetch(EXCHANGE_RATE_API_URL);
+  if (!response.ok) throw new Error('No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.');
+  const data = await response.json();
+  exchangeRatesCache = data;
+  return data?.rates || {};
+}
+
 async function convertTotalCurrency() {
-  const currency = ($('currencyInput')?.value || '').trim().toUpperCase();
+  const input = $('currencyInput');
+  const currency = (input?.value || '').trim().toUpperCase();
+  if (input) input.value = currency;
   if (!currency || currency.length !== 3) return showToast('Escribe un codigo de moneda de 3 letras, por ejemplo EUR.', 'error');
   const total = getLatestTotal();
+  if (!total) {
+    setApiResult('exchangeResult', 'Primero calcula una cotizacion para convertir el total.', 'info');
+    showToast('Primero calcula una cotizacion para convertir el total.', 'info');
+    return;
+  }
   setApiResult('exchangeResult', 'Consultando tasa de cambio...', 'loading');
   try {
-    const response = await fetch(EXCHANGE_RATE_API_URL);
-    if (!response.ok) throw new Error('No se pudo consultar ExchangeRate API.');
-    const data = await response.json();
-    const rate = data?.rates?.[currency];
+    const rates = await getExchangeRates();
+    const rate = rates?.[currency];
     if (!rate) throw new Error(`No se encontro tasa para ${currency}.`);
     const convertedTotal = +(total * rate).toFixed(2);
     currentExchangeInfo = { base: 'USD', currency, rate, totalUSD: total, convertedTotal };
@@ -277,15 +488,29 @@ async function convertTotalCurrency() {
     showToast('Total convertido correctamente.', 'success');
   } catch (error) {
     currentExchangeInfo = null;
-    setApiResult('exchangeResult', escapeHTML(error.message || 'Error al consultar ExchangeRate API.'), 'error');
+    setApiResult('exchangeResult', escapeHTML(error.message || 'No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.'), 'error');
     showToast('No se pudo convertir la moneda.', 'error');
   }
 }
 
 function bindGlobalApiEvents() {
   $('btnCountryApi')?.addEventListener('click', fetchCountryInfo);
+  $('countryInput')?.addEventListener('input', () => {
+    clearTimeout(countrySuggestionTimer);
+    countrySuggestionTimer = setTimeout(updateCountryAutocomplete, 180);
+  });
   $('btnWeatherApi')?.addEventListener('click', fetchWeatherInfo);
+  $('weatherCityInput')?.addEventListener('input', renderCitySuggestions);
   $('btnExchangeApi')?.addEventListener('click', convertTotalCurrency);
+  $('currencyInput')?.addEventListener('input', renderCurrencySuggestions);
+  renderCityChips();
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest?.('.api-tool')) {
+      hideSuggestions('countrySuggestions');
+      hideSuggestions('citySuggestions');
+      hideSuggestions('currencySuggestions');
+    }
+  });
 }
 
 function navigateTo(sectionId) {
