@@ -1,109 +1,99 @@
-# AC Manager - Calculadora de Presupuestos y Servicios Técnicos
+# CotizaAPI Global
 
-## Objetivos del Proyecto
+## Nombre del proyecto
 
-AC Manager es una aplicación web desarrollada para facilitar la creación de cotizaciones para servicios técnicos. Permite ingresar costos de repuestos y mano de obra, calcular automáticamente el IVA y el precio final, guardar el historial de cotizaciones y generar documentos PDF profesionales.
+**CotizaAPI Global - Sistema de cotizaciones con integracion de 3 APIs**
 
-### Alcance
-- Registro e inicio de sesión de usuarios.
-- Cálculo automático de presupuestos.
+## Problema que resuelve
+
+CotizaAPI Global permite crear cotizaciones para productos o servicios calculando precio, mano de obra, IVA, subtotal y total. Tambien complementa cada cotizacion con informacion internacional util para clientes: datos del pais, clima por ciudad y conversion del total desde USD a otra moneda.
+
+El proyecto mantiene:
+
+- Ingreso de precio del producto o servicio.
+- Ingreso de mano de obra.
+- Calculo de IVA, subtotal y total.
 - Historial de cotizaciones.
-- Generación de PDF.
-- Almacenamiento de datos en la nube mediante Supabase.
+- Descarga de PDF.
+- Guardado en Supabase cuando la base de datos esta disponible.
 
----
+## APIs usadas
 
-## Arquitectura del Software
+### 1. REST Countries
+
+Endpoint usado:
 
 ```text
-Usuario
-   │
-   ▼
-Frontend (HTML, CSS, JavaScript)
-   │
-   ▼
-Lógica de negocio
-(Cálculos, historial, PDF)
-   │
-   ▼
-Supabase API
-   │
-   ▼
-Base de Datos PostgreSQL
-(Tabla: presupuestos)
+https://restcountries.com/v3.1/name/{pais}
 ```
 
-### Flujo de funcionamiento
+Funcion dentro del proyecto:
 
-1. El usuario accede a la página.
-2. Inicia sesión o crea una cuenta.
-3. Ingresa los datos de la cotización.
-4. El sistema calcula subtotal, IVA y total.
-5. La información se almacena en Supabase.
-6. La cotización puede descargarse en PDF.
+- Permite escribir un pais.
+- Muestra bandera.
+- Muestra moneda.
+- Muestra idioma.
 
----
+### 2. OpenWeather
 
-## Stack Tecnológico
+Endpoint usado:
 
-- HTML5
-- CSS3
-- JavaScript (ES6)
-- Supabase
-- PostgreSQL
-- jsPDF
-- GitHub
-- GitHub Pages
+```text
+https://api.openweathermap.org/data/2.5/weather
+```
 
----
+Funcion dentro del proyecto:
 
-## Modelo de Datos
+- Permite escribir una ciudad.
+- Muestra temperatura.
+- Muestra humedad.
+- Muestra descripcion del clima.
 
-### Tipo de Base de Datos
+Configuracion:
 
-Base de datos **Relacional** utilizando PostgreSQL mediante Supabase.
+En `app.js` se deja preparada la constante:
 
-### Ubicación
+```js
+const WEATHER_API_KEY = "TU_API_KEY_AQUI";
+```
 
-Base de datos **externa en la nube** alojada en Supabase.
+Para usar OpenWeather, reemplaza `TU_API_KEY_AQUI` por una clave real de OpenWeather.
 
-### Tabla principal: presupuestos
+### 3. ExchangeRate API
 
-| Campo | Tipo |
-|---------|---------|
-| id | int8 |
-| created_at | timestamptz |
-| cliente | text |
-| dispositivo | text |
-| repuestos | float8 |
-| mano_obra | float8 |
-| iva | float8 |
-| total | float8 |
-| email | text |
-| fecha_creacion | timestamptz |
+Endpoint usado:
 
----
+```text
+https://open.er-api.com/v6/latest/USD
+```
 
-## Metodología con IA
+Funcion dentro del proyecto:
 
-Durante el desarrollo del proyecto se utilizaron herramientas de Inteligencia Artificial como Antigravity y Gemini para acelerar la generación de código, mejorar el diseño visual y apoyar en la solución de errores.
+- Toma el total de la cotizacion en USD.
+- Permite escribir una moneda destino, por ejemplo `EUR`, `COP` o `MXN`.
+- Convierte el total usando la tasa de cambio actual.
 
-La IA fue utilizada para:
-- Generación de estructuras HTML y CSS.
-- Corrección de errores en JavaScript.
-- Integración con Supabase.
-- Optimización del diseño de los PDF.
-- Documentación y organización del proyecto.
+## Como ejecutar el proyecto
 
-Las decisiones finales, pruebas, personalización y validación del funcionamiento fueron realizadas por el desarrollador del proyecto.
+Este proyecto es una pagina web estatica con HTML, CSS y JavaScript.
 
----
+1. Descarga o clona el repositorio.
+2. Abre `index.html` en el navegador.
+3. Crea una cuenta local o inicia sesion si ya existe.
+4. Ingresa los datos de la cotizacion.
+5. Usa el panel **APIs Globales** para consultar pais, clima y conversion de moneda.
+6. Guarda la cotizacion y descarga el PDF desde el historial.
 
-## Estado del Proyecto
+## Link del deploy
 
-Proyecto funcional con:
-- Registro de usuarios.
-- Cálculo automático de presupuestos.
-- Historial de cotizaciones.
-- Almacenamiento en Supabase.
-- Generación de PDF profesional.
+Repositorio:
+
+```text
+https://github.com/chitoadrian/Aporte-Web
+```
+
+Deploy:
+
+```text
+Agrega aqui el enlace publico de GitHub Pages, Vercel o Netlify cuando este publicado.
+```
