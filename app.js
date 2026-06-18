@@ -20,25 +20,26 @@ const WEATHER_API_KEY = "553f27cd6cdb30488d63f4a79a263efe";
 const EXCHANGE_RATE_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
 const COUNTRY_CATALOG = [
-  { es: 'España', en: 'Spain', code: 'ES', currency: 'EUR - Euro', language: 'Español', aliases: ['espana', 'españa', 'spain'], flag: 'https://flagcdn.com/w80/es.png' },
-  { es: 'Egipto', en: 'Egypt', code: 'EG', currency: 'EGP - Libra egipcia', language: 'Árabe', aliases: ['egipto', 'egypt', 'egi'], flag: 'https://flagcdn.com/w80/eg.png' },
-  { es: 'Ecuador', en: 'Ecuador', code: 'EC', currency: 'USD - Dólar estadounidense', language: 'Español', aliases: ['ecuador'], flag: 'https://flagcdn.com/w80/ec.png' },
-  { es: 'Colombia', en: 'Colombia', code: 'CO', currency: 'COP - Peso colombiano', language: 'Español', aliases: ['colombia'], flag: 'https://flagcdn.com/w80/co.png' },
-  { es: 'Perú', en: 'Peru', code: 'PE', currency: 'PEN - Sol peruano', language: 'Español', aliases: ['peru', 'perú'], flag: 'https://flagcdn.com/w80/pe.png' },
-  { es: 'México', en: 'Mexico', code: 'MX', currency: 'MXN - Peso mexicano', language: 'Español', aliases: ['mexico', 'méxico'], flag: 'https://flagcdn.com/w80/mx.png' },
-  { es: 'Estados Unidos', en: 'United States', code: 'US', currency: 'USD - Dólar estadounidense', language: 'Inglés', aliases: ['estados unidos', 'usa', 'united states'], flag: 'https://flagcdn.com/w80/us.png' },
-  { es: 'Canadá', en: 'Canada', code: 'CA', currency: 'CAD - Dólar canadiense', language: 'Inglés, Francés', aliases: ['canada', 'canadá'], flag: 'https://flagcdn.com/w80/ca.png' },
-  { es: 'Brasil', en: 'Brazil', code: 'BR', currency: 'BRL - Real brasileño', language: 'Portugués', aliases: ['brasil', 'brazil'], flag: 'https://flagcdn.com/w80/br.png' },
-  { es: 'Argentina', en: 'Argentina', code: 'AR', currency: 'ARS - Peso argentino', language: 'Español', aliases: ['argentina'], flag: 'https://flagcdn.com/w80/ar.png' },
-  { es: 'Chile', en: 'Chile', code: 'CL', currency: 'CLP - Peso chileno', language: 'Español', aliases: ['chile'], flag: 'https://flagcdn.com/w80/cl.png' },
-  { es: 'Francia', en: 'France', code: 'FR', currency: 'EUR - Euro', language: 'Francés', aliases: ['francia', 'france'], flag: 'https://flagcdn.com/w80/fr.png' },
-  { es: 'Alemania', en: 'Germany', code: 'DE', currency: 'EUR - Euro', language: 'Alemán', aliases: ['alemania', 'germany'], flag: 'https://flagcdn.com/w80/de.png' },
-  { es: 'Italia', en: 'Italy', code: 'IT', currency: 'EUR - Euro', language: 'Italiano', aliases: ['italia', 'italy'], flag: 'https://flagcdn.com/w80/it.png' },
-  { es: 'Reino Unido', en: 'United Kingdom', code: 'GB', currency: 'GBP - Libra esterlina', language: 'Inglés', aliases: ['reino unido', 'uk', 'united kingdom'], flag: 'https://flagcdn.com/w80/gb.png' },
-  { es: 'Portugal', en: 'Portugal', code: 'PT', currency: 'EUR - Euro', language: 'Portugués', aliases: ['portugal'], flag: 'https://flagcdn.com/w80/pt.png' }
+  { es: 'España', en: 'Spain', code: 'ES', capital: 'Madrid', currencyCode: 'EUR', currency: 'EUR - Euro', language: 'Español', aliases: ['espana', 'españa', 'spain'], flag: 'https://flagcdn.com/w80/es.png', cities: [{ label: 'Madrid', query: 'Madrid' }, { label: 'Barcelona', query: 'Barcelona' }, { label: 'Valencia', query: 'Valencia' }, { label: 'Sevilla', query: 'Seville' }] },
+  { es: 'Francia', en: 'France', code: 'FR', capital: 'París', currencyCode: 'EUR', currency: 'EUR - Euro', language: 'Francés', aliases: ['francia', 'france', 'paris', 'parís'], flag: 'https://flagcdn.com/w80/fr.png', cities: [{ label: 'París', query: 'Paris' }, { label: 'Marsella', query: 'Marseille' }, { label: 'Lyon', query: 'Lyon' }, { label: 'Toulouse', query: 'Toulouse' }] },
+  { es: 'Alemania', en: 'Germany', code: 'DE', capital: 'Berlín', currencyCode: 'EUR', currency: 'EUR - Euro', language: 'Alemán', aliases: ['alemania', 'germany', 'deutschland', 'berlin', 'berlín'], flag: 'https://flagcdn.com/w80/de.png', cities: [{ label: 'Berlín', query: 'Berlin' }, { label: 'Múnich', query: 'Munich' }, { label: 'Hamburgo', query: 'Hamburg' }, { label: 'Frankfurt', query: 'Frankfurt' }] },
+  { es: 'Ecuador', en: 'Ecuador', code: 'EC', capital: 'Quito', currencyCode: 'USD', currency: 'USD - Dólar estadounidense', language: 'Español', aliases: ['ecuador', 'quito'], flag: 'https://flagcdn.com/w80/ec.png', cities: [{ label: 'Quito', query: 'Quito' }, { label: 'Guayaquil', query: 'Guayaquil' }, { label: 'Cuenca', query: 'Cuenca' }, { label: 'Manta', query: 'Manta' }] },
+  { es: 'Egipto', en: 'Egypt', code: 'EG', capital: 'El Cairo', currencyCode: 'EGP', currency: 'EGP - Libra egipcia', language: 'Árabe', aliases: ['egipto', 'egypt', 'egi'], flag: 'https://flagcdn.com/w80/eg.png', cities: [{ label: 'El Cairo', query: 'Cairo' }, { label: 'Alejandría', query: 'Alexandria' }] },
+  { es: 'Colombia', en: 'Colombia', code: 'CO', capital: 'Bogotá', currencyCode: 'COP', currency: 'COP - Peso colombiano', language: 'Español', aliases: ['colombia', 'bogota', 'bogotá'], flag: 'https://flagcdn.com/w80/co.png', cities: [{ label: 'Bogotá', query: 'Bogota' }, { label: 'Medellín', query: 'Medellin' }, { label: 'Cali', query: 'Cali' }] },
+  { es: 'Perú', en: 'Peru', code: 'PE', capital: 'Lima', currencyCode: 'PEN', currency: 'PEN - Sol peruano', language: 'Español', aliases: ['peru', 'perú', 'lima'], flag: 'https://flagcdn.com/w80/pe.png', cities: [{ label: 'Lima', query: 'Lima' }, { label: 'Cusco', query: 'Cusco' }] },
+  { es: 'México', en: 'Mexico', code: 'MX', capital: 'Ciudad de México', currencyCode: 'MXN', currency: 'MXN - Peso mexicano', language: 'Español', aliases: ['mexico', 'méxico'], flag: 'https://flagcdn.com/w80/mx.png', cities: [{ label: 'Ciudad de México', query: 'Mexico City' }, { label: 'Guadalajara', query: 'Guadalajara' }, { label: 'Monterrey', query: 'Monterrey' }] },
+  { es: 'Estados Unidos', en: 'United States', code: 'US', capital: 'Washington', currencyCode: 'USD', currency: 'USD - Dólar estadounidense', language: 'Inglés', aliases: ['estados unidos', 'usa', 'united states'], flag: 'https://flagcdn.com/w80/us.png', cities: [{ label: 'Washington', query: 'Washington' }, { label: 'New York', query: 'New York' }, { label: 'Los Angeles', query: 'Los Angeles' }] },
+  { es: 'Canadá', en: 'Canada', code: 'CA', capital: 'Ottawa', currencyCode: 'CAD', currency: 'CAD - Dólar canadiense', language: 'Inglés, Francés', aliases: ['canada', 'canadá'], flag: 'https://flagcdn.com/w80/ca.png', cities: [{ label: 'Ottawa', query: 'Ottawa' }, { label: 'Toronto', query: 'Toronto' }, { label: 'Montreal', query: 'Montreal' }] },
+  { es: 'Brasil', en: 'Brazil', code: 'BR', capital: 'Brasilia', currencyCode: 'BRL', currency: 'BRL - Real brasileño', language: 'Portugués', aliases: ['brasil', 'brazil'], flag: 'https://flagcdn.com/w80/br.png', cities: [{ label: 'Brasilia', query: 'Brasilia' }, { label: 'São Paulo', query: 'Sao Paulo' }, { label: 'Río de Janeiro', query: 'Rio de Janeiro' }] },
+  { es: 'Argentina', en: 'Argentina', code: 'AR', capital: 'Buenos Aires', currencyCode: 'ARS', currency: 'ARS - Peso argentino', language: 'Español', aliases: ['argentina'], flag: 'https://flagcdn.com/w80/ar.png', cities: [{ label: 'Buenos Aires', query: 'Buenos Aires' }, { label: 'Córdoba', query: 'Cordoba' }] },
+  { es: 'Chile', en: 'Chile', code: 'CL', capital: 'Santiago', currencyCode: 'CLP', currency: 'CLP - Peso chileno', language: 'Español', aliases: ['chile'], flag: 'https://flagcdn.com/w80/cl.png', cities: [{ label: 'Santiago', query: 'Santiago' }, { label: 'Valparaíso', query: 'Valparaiso' }] },
+  { es: 'Italia', en: 'Italy', code: 'IT', capital: 'Roma', currencyCode: 'EUR', currency: 'EUR - Euro', language: 'Italiano', aliases: ['italia', 'italy'], flag: 'https://flagcdn.com/w80/it.png', cities: [{ label: 'Roma', query: 'Rome' }, { label: 'Milán', query: 'Milan' }] },
+  { es: 'Reino Unido', en: 'United Kingdom', code: 'GB', capital: 'Londres', currencyCode: 'GBP', currency: 'GBP - Libra esterlina', language: 'Inglés', aliases: ['reino unido', 'uk', 'united kingdom'], flag: 'https://flagcdn.com/w80/gb.png', cities: [{ label: 'Londres', query: 'London' }, { label: 'Manchester', query: 'Manchester' }] },
+  { es: 'Portugal', en: 'Portugal', code: 'PT', capital: 'Lisboa', currencyCode: 'EUR', currency: 'EUR - Euro', language: 'Portugués', aliases: ['portugal'], flag: 'https://flagcdn.com/w80/pt.png', cities: [{ label: 'Lisboa', query: 'Lisbon' }, { label: 'Oporto', query: 'Porto' }] }
 ];
-const CITY_SUGGESTIONS = ['Quito', 'Guayaquil', 'Cuenca', 'Madrid', 'Bogotá', 'Lima'];
+const DEFAULT_CITY_SUGGESTIONS = [{ label: 'Quito', query: 'Quito' }, { label: 'Guayaquil', query: 'Guayaquil' }, { label: 'Cuenca', query: 'Cuenca' }, { label: 'Madrid', query: 'Madrid' }, { label: 'Bogotá', query: 'Bogota' }, { label: 'Lima', query: 'Lima' }];
 const COMMON_CURRENCIES = ['USD', 'EUR', 'COP', 'MXN', 'PEN', 'CLP', 'ARS', 'BRL', 'GBP', 'CAD', 'JPY'];
+const CITY_QUERY_ALIASES = { 'paris': 'Paris', 'berlin': 'Berlin', 'munich': 'Munich', 'munich': 'Munich', 'bogota': 'Bogota', 'cordoba': 'Cordoba', 'sao paulo': 'Sao Paulo', 'rio de janeiro': 'Rio de Janeiro', 'seville': 'Seville', 'sevilla': 'Seville', 'londres': 'London', 'roma': 'Rome', 'milan': 'Milan', 'milan': 'Milan', 'lisboa': 'Lisbon' };
 
 let budgetList = [];
 let authMode = 'login';
@@ -48,6 +49,8 @@ let currentExchangeInfo = null;
 let latestQuoteTotals = { subtotal: 0, iva: 0, total: 0 };
 let exchangeRatesCache = null;
 let countrySuggestionTimer = null;
+let exchangeTimer = null;
+let currentUser = '';
 
 const $ = (id) => document.getElementById(id);
 
@@ -63,18 +66,9 @@ function migrateLegacyStorage() {
   });
 }
 
-migrateLegacyStorage();
-let currentUser = localStorage.getItem(STORAGE_SESSION_KEY) || '';
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value) || 0);
-}
-function escapeHTML(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-}
-function normalizeText(value) {
-  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-}
+function formatCurrency(value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value) || 0); }
+function escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+function normalizeText(value) { return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
 function setText(id, value) { const element = $(id); if (element) element.textContent = value; }
 function showToast(message, type = 'info') {
   const container = $('toastContainer');
@@ -126,6 +120,7 @@ function calculateAmounts(parts, labor) {
 }
 function setApiResult(id, html, type = 'info') { const element = $(id); if (element) { element.className = `api-result api-result-${type}`; element.innerHTML = html; } }
 function getLatestTotal() { latestQuoteTotals = calculateAmounts(parseFloat($('partsCost')?.value) || 0, parseFloat($('laborCost')?.value) || 0); return latestQuoteTotals.total; }
+function getCurrencyName(currencyText) { return String(currencyText || '').split(' - ')[1] || String(currencyText || 'No disponible'); }
 
 function injectGlobalApisPanel() {
   if ($('globalApisCard')) return;
@@ -134,21 +129,33 @@ function injectGlobalApisPanel() {
   const card = document.createElement('div');
   card.className = 'card card-form global-apis-card';
   card.id = 'globalApisCard';
-  card.innerHTML = `<div class="card-header"><h2>APIs Globales</h2></div><div class="api-grid"><section class="api-tool"><h3>País</h3><p>Consulta bandera, moneda e idioma con REST Countries. Puedes escribir nombres en español o parciales.</p><div class="api-input-row"><input type="text" id="countryInput" placeholder="Ej. España o egi" autocomplete="off"><button type="button" id="btnCountryApi" class="btn-api">Buscar</button><div id="countrySuggestions" class="api-suggestions"></div></div><div id="countryResult" class="api-result api-result-info">Escribe 2 o más letras para ver sugerencias.</div></section><section class="api-tool"><h3>Clima</h3><p>Consulta temperatura, humedad y descripción con OpenWeather.</p><div class="api-input-row"><input type="text" id="weatherCityInput" placeholder="Ej. Quito" autocomplete="off"><button type="button" id="btnWeatherApi" class="btn-api">Ver clima</button><div id="citySuggestions" class="api-suggestions"></div></div><div id="cityChips" class="city-chips"></div><div id="weatherResult" class="api-result api-result-info">Configura WEATHER_API_KEY para consultar el clima.</div></section><section class="api-tool"><h3>Moneda</h3><p>Convierte el total de USD a otra moneda con ExchangeRate API.</p><div class="api-input-row"><input type="text" id="currencyInput" placeholder="EUR, COP, MXN" maxlength="3" autocomplete="off"><button type="button" id="btnExchangeApi" class="btn-api">Convertir</button><div id="currencySuggestions" class="api-suggestions"></div></div><div id="exchangeResult" class="api-result api-result-info">Primero calcula una cotización para convertir el total.</div></section></div>`;
+  card.innerHTML = `<div class="card-header"><h2>APIs Globales</h2></div><div class="api-grid"><section class="api-tool"><h3>País</h3><p>Consulta país, código, capital, moneda e idioma con REST Countries.</p><div class="api-input-row"><input type="text" id="countryInput" placeholder="Ej. España o egi" autocomplete="off"><button type="button" id="btnCountryApi" class="btn-api">Buscar</button><div id="countrySuggestions" class="api-suggestions"></div></div><div id="countryResult" class="api-result api-result-info">Escribe 2 o más letras para ver sugerencias.</div></section><section class="api-tool"><h3>Clima</h3><p>Selecciona una ciudad sugerida según el país y consulta OpenWeather.</p><div class="api-input-row"><input type="text" id="weatherCityInput" placeholder="Ej. Quito" autocomplete="off"><button type="button" id="btnWeatherApi" class="btn-api">Ver clima</button><div id="citySuggestions" class="api-suggestions"></div></div><div id="cityChips" class="city-chips"></div><div id="weatherResult" class="api-result api-result-info">Selecciona un país o escribe una ciudad para consultar el clima.</div></section><section class="api-tool"><h3>Moneda</h3><p>Convierte automáticamente el total usando la moneda oficial del país seleccionado.</p><div class="api-input-row"><input type="text" id="currencyInput" placeholder="EUR, COP, MXN" maxlength="3" autocomplete="off"><button type="button" id="btnExchangeApi" class="btn-api">Convertir</button><div id="currencySuggestions" class="api-suggestions"></div></div><div id="exchangeResult" class="api-result api-result-info">Primero calcula una cotización y selecciona un país o moneda.</div></section></div>`;
   formSection.appendChild(card);
 }
 
+function getCityOptionsForCountry(country = currentCountryInfo) {
+  if (country?.cities?.length) return country.cities;
+  if (country?.capital) return [{ label: country.capital, query: country.capital }];
+  return DEFAULT_CITY_SUGGESTIONS;
+}
 function catalogMatches(query) {
   const normalized = normalizeText(query);
   if (normalized.length < 2) return [];
-  return COUNTRY_CATALOG.filter((country) => [country.es, country.en, country.code, ...(country.aliases || [])].map(normalizeText).some((value) => value.includes(normalized)));
+  return COUNTRY_CATALOG.filter((country) => [country.es, country.en, country.code, country.capital, ...(country.aliases || [])].map(normalizeText).some((value) => value.includes(normalized)));
 }
-function mapCountryFromCatalog(country) { return { name: country.es, officialName: country.en, code: country.code, flag: country.flag, currencies: country.currency, languages: country.language }; }
+function mapCountryFromCatalog(country) {
+  return { name: country.es, officialName: country.en, code: country.code, flag: country.flag, currencyCode: country.currencyCode, currencyName: getCurrencyName(country.currency), currencies: country.currency, languages: country.language, capital: country.capital, cities: country.cities || [] };
+}
 function mapCountryFromApi(country, fallbackName = '') {
   const code = country.codes?.cca2 || country.codes?.cca3 || country.cca2 || '';
-  const currencies = Object.entries(country.currencies || {}).map(([codeKey, item]) => `${codeKey} - ${item.name || 'Moneda'}`).join(', ') || 'No disponible';
+  const currencyEntries = Object.entries(country.currencies || {});
+  const currencyCode = currencyEntries[0]?.[0] || '';
+  const currencyName = currencyEntries[0]?.[1]?.name || 'Moneda';
+  const currencies = currencyCode ? `${currencyCode} - ${currencyName}` : 'No disponible';
   const languages = Object.values(country.languages || {}).map((item) => item.name || item).join(', ') || 'No disponible';
-  return { name: country.names?.common || country.name?.common || fallbackName, officialName: country.names?.official || country.name?.official || '', code, flag: country.assets?.flag_png || country.assets?.flag_svg || country.flags?.png || country.flags?.svg || '', currencies, languages };
+  const capital = Array.isArray(country.capital) ? country.capital[0] : (country.capital || country.capitals?.[0] || 'No disponible');
+  const catalog = COUNTRY_CATALOG.find((item) => item.code === code || normalizeText(item.en) === normalizeText(country.names?.common || country.name?.common));
+  return { name: catalog?.es || country.names?.common || country.name?.common || fallbackName, officialName: country.names?.official || country.name?.official || '', code, flag: country.assets?.flag_png || country.assets?.flag_svg || country.flags?.png || country.flags?.svg || catalog?.flag || '', currencyCode, currencyName, currencies, languages, capital, cities: catalog?.cities || (capital && capital !== 'No disponible' ? [{ label: capital, query: capital }] : []) };
 }
 async function fetchCountryCandidates(query) {
   try {
@@ -158,7 +165,7 @@ async function fetchCountryCandidates(query) {
     const objects = data?.data?.objects || data || [];
     if (!Array.isArray(objects)) return [];
     const normalized = normalizeText(query);
-    return objects.map((country) => mapCountryFromApi(country, query)).filter((country) => [country.name, country.officialName, country.code].map(normalizeText).some((value) => value.includes(normalized)));
+    return objects.map((country) => mapCountryFromApi(country, query)).filter((country) => [country.name, country.officialName, country.code, country.capital].map(normalizeText).some((value) => value.includes(normalized)));
   } catch { return []; }
 }
 function renderCountrySuggestions(items) {
@@ -184,14 +191,20 @@ async function selectCountrySuggestion(countryName) { const input = $('countryIn
 function renderCountryInfo(info) {
   currentCountryInfo = info;
   const flagMarkup = info.flag ? `<img src="${escapeHTML(info.flag)}" alt="Bandera de ${escapeHTML(info.name)}">` : '';
-  setApiResult('countryResult', `<div class="country-result">${flagMarkup}<div><strong>${escapeHTML(info.name)} ${info.code ? `(${escapeHTML(info.code)})` : ''}</strong><span>Moneda: ${escapeHTML(info.currencies)}</span><span>Idioma: ${escapeHTML(info.languages)}</span></div></div>`, 'success');
+  setApiResult('countryResult', `<div class="country-result">${flagMarkup}<div><strong>${escapeHTML(info.name)} (${escapeHTML(info.code || 'N/D')})</strong><span>Capital: ${escapeHTML(info.capital || 'No disponible')}</span><span>Moneda oficial: ${escapeHTML(info.currencies || 'No disponible')}</span><span>Idioma: ${escapeHTML(info.languages || 'No disponible')}</span></div></div>`, 'success');
+  if ($('currencyInput') && info.currencyCode) $('currencyInput').value = info.currencyCode.toUpperCase();
+  renderCityChips();
+  const firstCity = getCityOptionsForCountry(info)[0];
+  if (firstCity && $('weatherCityInput') && !$('weatherCityInput').value) $('weatherCityInput').value = firstCity.label;
+  scheduleAutoConversion();
 }
 async function fetchCountryInfo() {
   const query = ($('countryInput')?.value || '').trim();
   if (!query) return showToast('Escribe un país para consultar.', 'error');
   setApiResult('countryResult', 'Consultando país...', 'loading');
   try {
-    const localExact = catalogMatches(query).find((country) => [country.es, country.en, country.code, ...(country.aliases || [])].map(normalizeText).includes(normalizeText(query)));
+    const normalized = normalizeText(query);
+    const localExact = catalogMatches(query).find((country) => [country.es, country.en, country.code, country.capital, ...(country.aliases || [])].map(normalizeText).includes(normalized));
     const localMatch = localExact || catalogMatches(query)[0];
     if (localMatch) { renderCountryInfo(mapCountryFromCatalog(localMatch)); showToast('Datos del país cargados.', 'success'); return; }
     const remote = await fetchCountryCandidates(query);
@@ -207,22 +220,28 @@ async function fetchCountryInfo() {
 function renderCityChips() {
   const container = $('cityChips');
   if (!container) return;
-  container.innerHTML = CITY_SUGGESTIONS.map((city) => `<button type="button" class="city-chip" data-city="${escapeHTML(city)}">${escapeHTML(city)}</button>`).join('');
+  const options = getCityOptionsForCountry();
+  container.innerHTML = options.map((city) => `<button type="button" class="city-chip" data-city="${escapeHTML(city.label)}" data-query="${escapeHTML(city.query || city.label)}">${escapeHTML(city.label)}</button>`).join('');
   container.querySelectorAll('.city-chip').forEach((button) => button.addEventListener('click', () => { const input = $('weatherCityInput'); if (input) input.value = button.dataset.city || ''; hideSuggestions('citySuggestions'); }));
 }
 function renderCitySuggestions() {
   const query = normalizeText($('weatherCityInput')?.value || '');
   const list = $('citySuggestions');
   if (!list || query.length < 2) return hideSuggestions('citySuggestions');
-  const matches = CITY_SUGGESTIONS.filter((city) => normalizeText(city).includes(query));
+  const matches = getCityOptionsForCountry().filter((city) => normalizeText(city.label).includes(query) || normalizeText(city.query).includes(query));
   if (!matches.length) return hideSuggestions('citySuggestions');
-  list.innerHTML = matches.map((city) => `<button type="button" class="suggestion-item" data-city="${escapeHTML(city)}"><span></span><span>${escapeHTML(city)}</span><span class="suggestion-code">CIUDAD</span></button>`).join('');
+  list.innerHTML = matches.map((city) => `<button type="button" class="suggestion-item" data-city="${escapeHTML(city.label)}"><span></span><span>${escapeHTML(city.label)}</span><span class="suggestion-code">${escapeHTML(currentCountryInfo?.code || 'CIUDAD')}</span></button>`).join('');
   list.classList.add('show');
   list.querySelectorAll('.suggestion-item').forEach((button) => button.addEventListener('click', () => { const input = $('weatherCityInput'); if (input) input.value = button.dataset.city || ''; hideSuggestions('citySuggestions'); }));
 }
+function resolveWeatherCityQuery(city) {
+  const normalized = normalizeText(city);
+  const matched = getCityOptionsForCountry().find((item) => normalizeText(item.label) === normalized || normalizeText(item.query) === normalized);
+  return matched?.query || CITY_QUERY_ALIASES[normalized] || city;
+}
 async function fetchWeatherInfo() {
-  const city = ($('weatherCityInput')?.value || '').trim();
-  if (!city) return showToast('Escribe una ciudad para consultar el clima.', 'error');
+  const cityLabel = ($('weatherCityInput')?.value || '').trim();
+  if (!cityLabel) return showToast('Escribe una ciudad para consultar el clima.', 'error');
   if (!WEATHER_API_KEY || WEATHER_API_KEY === 'PEGA_AQUI_TU_API_KEY_REAL') {
     setApiResult('weatherResult', 'Configura WEATHER_API_KEY para consultar el clima.', 'info');
     showToast('Configura WEATHER_API_KEY para consultar el clima.', 'info');
@@ -230,11 +249,13 @@ async function fetchWeatherInfo() {
   }
   setApiResult('weatherResult', 'Consultando clima...', 'loading');
   try {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${WEATHER_API_KEY}&units=metric&lang=es`);
+    const cityQuery = resolveWeatherCityQuery(cityLabel);
+    const scopedCity = currentCountryInfo?.code ? `${cityQuery},${currentCountryInfo.code}` : cityQuery;
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(scopedCity)}&appid=${WEATHER_API_KEY}&units=metric&lang=es`);
     if (!response.ok) throw new Error('No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.');
     const data = await response.json();
-    currentWeatherInfo = { city: data.name || city, temperature: Math.round(data.main?.temp ?? 0), humidity: data.main?.humidity ?? 0, description: data.weather?.[0]?.description || 'No disponible' };
-    setApiResult('weatherResult', `<strong>${escapeHTML(currentWeatherInfo.city)}</strong><span>Temperatura: ${currentWeatherInfo.temperature} C</span><span>Humedad: ${currentWeatherInfo.humidity}%</span><span>Descripción: ${escapeHTML(currentWeatherInfo.description)}</span>`, 'success');
+    currentWeatherInfo = { city: data.name || cityLabel, requestedCity: cityLabel, country: data.sys?.country || currentCountryInfo?.code || 'No disponible', temperature: Math.round(data.main?.temp ?? 0), humidity: data.main?.humidity ?? 0, description: data.weather?.[0]?.description || 'No disponible' };
+    setApiResult('weatherResult', `<strong>${escapeHTML(currentWeatherInfo.city)} (${escapeHTML(currentWeatherInfo.country)})</strong><span>Temperatura: ${currentWeatherInfo.temperature} C</span><span>Humedad: ${currentWeatherInfo.humidity}%</span><span>Descripción: ${escapeHTML(currentWeatherInfo.description)}</span>`, 'success');
   } catch (error) {
     currentWeatherInfo = null;
     setApiResult('weatherResult', escapeHTML(error.message || 'No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.'), 'error');
@@ -248,11 +269,12 @@ function renderCurrencySuggestions() {
   input.value = input.value.toUpperCase();
   const query = normalizeText(input.value);
   if (!query.length) return hideSuggestions('currencySuggestions');
-  const matches = COMMON_CURRENCIES.filter((code) => code.toLowerCase().includes(query)).slice(0, 8);
+  const official = currentCountryInfo?.currencyCode ? [currentCountryInfo.currencyCode.toUpperCase()] : [];
+  const matches = [...new Set([...official, ...COMMON_CURRENCIES])].filter((code) => code.toLowerCase().includes(query)).slice(0, 8);
   if (!matches.length) return hideSuggestions('currencySuggestions');
   list.innerHTML = matches.map((code) => `<button type="button" class="suggestion-item" data-currency="${code}"><span></span><span>${code}</span><span class="suggestion-code">MONEDA</span></button>`).join('');
   list.classList.add('show');
-  list.querySelectorAll('.suggestion-item').forEach((button) => button.addEventListener('click', () => { input.value = (button.dataset.currency || '').toUpperCase(); hideSuggestions('currencySuggestions'); }));
+  list.querySelectorAll('.suggestion-item').forEach((button) => button.addEventListener('click', () => { input.value = (button.dataset.currency || '').toUpperCase(); hideSuggestions('currencySuggestions'); convertTotalCurrency(); }));
 }
 async function getExchangeRates() {
   if (exchangeRatesCache?.rates) return exchangeRatesCache.rates;
@@ -262,21 +284,29 @@ async function getExchangeRates() {
   exchangeRatesCache = data;
   return data?.rates || {};
 }
-async function convertTotalCurrency() {
+function scheduleAutoConversion() {
+  clearTimeout(exchangeTimer);
+  exchangeTimer = setTimeout(() => {
+    const currency = currentCountryInfo?.currencyCode || $('currencyInput')?.value;
+    if (currency && getLatestTotal() > 0) convertTotalCurrency(currency, { automatic: true });
+    else if (currency) setApiResult('exchangeResult', `Moneda oficial detectada: ${escapeHTML(currency.toUpperCase())}. Primero calcula una cotización para convertir el total.`, 'info');
+  }, 250);
+}
+async function convertTotalCurrency(currencyOverride = '', options = {}) {
   const input = $('currencyInput');
-  const currency = (input?.value || '').trim().toUpperCase();
-  if (input) input.value = currency;
+  const currency = String(currencyOverride || input?.value || currentCountryInfo?.currencyCode || '').trim().toUpperCase();
+  if (input && currency) input.value = currency;
   if (!currency || currency.length !== 3) return showToast('Escribe un código de moneda de 3 letras, por ejemplo EUR.', 'error');
   const total = getLatestTotal();
-  if (!total) { setApiResult('exchangeResult', 'Primero calcula una cotización para convertir el total.', 'info'); return showToast('Primero calcula una cotización para convertir el total.', 'info'); }
+  if (!total) { setApiResult('exchangeResult', 'Primero calcula una cotización para convertir el total.', 'info'); if (!options.automatic) showToast('Primero calcula una cotización para convertir el total.', 'info'); return; }
   setApiResult('exchangeResult', 'Consultando tasa de cambio...', 'loading');
   try {
     const rates = await getExchangeRates();
     const rate = rates?.[currency];
     if (!rate) throw new Error(`No se encontró tasa para ${currency}.`);
     const convertedTotal = +(total * rate).toFixed(2);
-    currentExchangeInfo = { base: 'USD', currency, rate, totalUSD: total, convertedTotal };
-    setApiResult('exchangeResult', `<strong>${formatCurrency(total)} USD = ${convertedTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}</strong><span>Tasa usada: 1 USD = ${rate} ${currency}</span>`, 'success');
+    currentExchangeInfo = { base: 'USD', currency, currencyName: currentCountryInfo?.currencyName || currency, rate, totalUSD: total, convertedTotal, country: currentCountryInfo?.name || 'No seleccionado' };
+    setApiResult('exchangeResult', `<strong>${formatCurrency(total)} USD = ${convertedTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}</strong><span>Moneda oficial: ${escapeHTML(currentExchangeInfo.currencyName)}</span><span>Tasa usada: 1 USD = ${rate} ${currency}</span>`, 'success');
   } catch (error) {
     currentExchangeInfo = null;
     setApiResult('exchangeResult', escapeHTML(error.message || 'No se pudo conectar con la API. Revisa tu internet o intenta con otro nombre.'), 'error');
@@ -288,15 +318,13 @@ function bindGlobalApiEvents() {
   $('countryInput')?.addEventListener('input', () => { clearTimeout(countrySuggestionTimer); countrySuggestionTimer = setTimeout(updateCountryAutocomplete, 180); });
   $('btnWeatherApi')?.addEventListener('click', fetchWeatherInfo);
   $('weatherCityInput')?.addEventListener('input', renderCitySuggestions);
-  $('btnExchangeApi')?.addEventListener('click', convertTotalCurrency);
+  $('btnExchangeApi')?.addEventListener('click', () => convertTotalCurrency());
   $('currencyInput')?.addEventListener('input', renderCurrencySuggestions);
   renderCityChips();
   document.addEventListener('click', (event) => { if (!event.target.closest?.('.api-tool')) ['countrySuggestions', 'citySuggestions', 'currencySuggestions'].forEach(hideSuggestions); });
 }
 
-function navigateTo(sectionId) {
-  ['landingSection', 'authSection', 'calculatorSection'].forEach((id) => { const section = $(id); if (section) section.classList.toggle('hidden', id !== sectionId); });
-}
+function navigateTo(sectionId) { ['landingSection', 'authSection', 'calculatorSection'].forEach((id) => { const section = $(id); if (section) section.classList.toggle('hidden', id !== sectionId); }); }
 function getBudgetStorageKey() { return currentUser ? `${STORAGE_BUDGETS_KEY}_${currentUser.toLowerCase()}` : `${STORAGE_BUDGETS_KEY}_guest`; }
 function loadLocalMirror() { try { budgetList = JSON.parse(localStorage.getItem(getBudgetStorageKey()) || '[]'); } catch { budgetList = []; } }
 function saveLocalMirror() { localStorage.setItem(getBudgetStorageKey(), JSON.stringify(budgetList)); }
@@ -388,6 +416,7 @@ function updatePreviewDisplay() {
   setText('partsPercent', `${partPct}%`);
   setText('laborPercent', `${laborPct}%`);
   setText('ivaPercent', `${ivaPct}%`);
+  scheduleAutoConversion();
 }
 async function handleBudgetFormSubmit(event) {
   event.preventDefault();
@@ -398,6 +427,7 @@ async function handleBudgetFormSubmit(event) {
   const email = currentUser || $('email')?.value || 'sin-correo@local.com';
   if (!clientName || !deviceModel) return showToast('Completa cliente y producto o servicio.', 'error');
   const { subtotal, iva, total } = calculateAmounts(partsCost, laborCost);
+  if (currentCountryInfo?.currencyCode && !currentExchangeInfo) await convertTotalCurrency(currentCountryInfo.currencyCode, { automatic: true });
   const payload = { cliente: clientName, dispositivo: deviceModel, repuestos: partsCost, mano_obra: laborCost, iva, total, email, fecha_creacion: new Date().toISOString() };
   const result = await insertToSupabase(payload);
   const row = result.row || {};
@@ -436,9 +466,9 @@ async function generatePDF(item) {
   doc.setFillColor(15, 23, 42); doc.roundedRect(18, y, 174, 12, 3, 3, 'F'); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('Descripción', 25, y + 8); doc.text('Valor', 183, y + 8, { align: 'right' }); y += 24;
   [['Producto / servicio', item.partsCost], ['Mano de obra', item.laborCost], ['Subtotal', item.subtotal], ['IVA 15%', item.iva], ['Total', item.total]].forEach((row, index) => { if (index % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(18, y - 8, 174, 12, 'F'); } doc.setTextColor(30, 41, 59); doc.setFont('helvetica', index >= 2 ? 'bold' : 'normal'); doc.setFontSize(10.5); doc.text(row[0], 25, y); doc.text(formatCurrency(row[1]), 183, y, { align: 'right' }); y += 13; });
   y += 8; doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text('Datos de APIs integradas', 18, y); y += 10; doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(51, 65, 85);
-  const countryText = item.countryInfo ? `REST Countries: País ${item.countryInfo.name}. Moneda: ${item.countryInfo.currencies}. Idioma: ${item.countryInfo.languages}.` : 'REST Countries: No consultado.';
-  const weatherText = item.weatherInfo ? `OpenWeather: Clima en ${item.weatherInfo.city}. Temperatura: ${item.weatherInfo.temperature} C. Humedad: ${item.weatherInfo.humidity}%. Descripción: ${item.weatherInfo.description}.` : 'OpenWeather: No consultado.';
-  const exchangeText = item.exchangeInfo ? `ExchangeRate: ${formatCurrency(item.exchangeInfo.totalUSD)} USD = ${item.exchangeInfo.convertedTotal} ${item.exchangeInfo.currency}. Tasa: 1 USD = ${item.exchangeInfo.rate} ${item.exchangeInfo.currency}.` : 'ExchangeRate: No consultado.';
+  const countryText = item.countryInfo ? `REST Countries: País ${item.countryInfo.name} (${item.countryInfo.code}). Capital: ${item.countryInfo.capital}. Moneda oficial: ${item.countryInfo.currencies}. Idioma: ${item.countryInfo.languages}.` : 'REST Countries: No consultado.';
+  const weatherText = item.weatherInfo ? `OpenWeather: Ciudad ${item.weatherInfo.city} (${item.weatherInfo.country}). Temperatura: ${item.weatherInfo.temperature} C. Humedad: ${item.weatherInfo.humidity}%. Descripción: ${item.weatherInfo.description}.` : 'OpenWeather: No consultado.';
+  const exchangeText = item.exchangeInfo ? `ExchangeRate: ${formatCurrency(item.exchangeInfo.totalUSD)} USD = ${item.exchangeInfo.convertedTotal} ${item.exchangeInfo.currency}. Tasa usada: 1 USD = ${item.exchangeInfo.rate} ${item.exchangeInfo.currency}.` : 'ExchangeRate: No consultado.';
   [countryText, weatherText, exchangeText].forEach((text) => { const lines = splitPdfText(doc, text, 166); doc.text(lines, 25, y); y += lines.length * 5 + 5; });
   if (y > pageHeight - 42) { doc.addPage(); y = 24; }
   doc.setFillColor(0, 94, 170); doc.roundedRect(112, y, 80, 18, 4, 4, 'F'); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text('Total general', 119, y + 12); doc.text(formatCurrency(item.total), 185, y + 12, { align: 'right' });
@@ -446,6 +476,8 @@ async function generatePDF(item) {
 }
 
 function init() {
+  migrateLegacyStorage();
+  currentUser = localStorage.getItem(STORAGE_SESSION_KEY) || '';
   updateProjectBranding(); injectGlobalApiStyles(); injectGlobalApisPanel(); loadLocalMirror(); bindGlobalApiEvents(); setAuthMode('login');
   if (currentUser && $('email')) $('email').value = currentUser;
   setText('dbStatusLabel', '3 APIs + Local');
