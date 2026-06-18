@@ -23,6 +23,6 @@ La aplicación consta de un cliente estático (Frontend) desarrollado con HTML5 
 ## 💻 Configuración Local e Instalación
 1. Clona este repositorio público:
    ```bash
-   git clone https://github.com/tu-usuario/nombre-del-repo.git
+   (https://chitoadrian.github.io/Aporte-Web/)
    ```
 2. Abre el archivo `index.html` de forma directa o ejecuta un servidor en vivo local. No requiere variables de entorno pesadas en el cliente local.
