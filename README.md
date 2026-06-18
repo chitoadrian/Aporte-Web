@@ -24,7 +24,7 @@ El proyecto mantiene:
 Endpoint usado:
 
 ```text
-https://restcountries.com/v3.1/name/{pais}
+https://api.restcountries.com/countries/v5/name?q={pais}
 ```
 
 Funcion dentro del proyecto:
@@ -33,6 +33,16 @@ Funcion dentro del proyecto:
 - Muestra bandera.
 - Muestra moneda.
 - Muestra idioma.
+
+Configuracion:
+
+En `app.js` se deja preparada la constante:
+
+```js
+const REST_COUNTRIES_API_KEY = "rc_live_demo";
+```
+
+La clave demo oficial permite probar la forma de la respuesta. Para datos completos en produccion, reemplaza `rc_live_demo` por una clave real de REST Countries.
 
 ### 2. OpenWeather
 
