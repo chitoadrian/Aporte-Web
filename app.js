@@ -1,5 +1,5 @@
 // ============================================================
-// AC MANAGER - app.js limpio y funcional
+// COTIZAAPI - app.js limpio y funcional
 // ============================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -14,6 +14,10 @@ const STORAGE_BUDGETS_KEY = 'ac_manager_budgets';
 const STORAGE_USERS_KEY = 'ac_manager_users';
 const STORAGE_SESSION_KEY = 'ac_manager_session';
 const IVA_RATE = 0.15;
+
+// En un proyecto real, la API_KEY sirve para autenticar la conexion
+// con una API externa de calculo, facturacion o cotizaciones.
+const API_KEY = "TU_API_KEY_AQUI";
 
 let budgetList = [];
 let authMode = 'login';
@@ -108,13 +112,100 @@ function getCurrentFormattedDate() {
   return new Date().toLocaleString('es-ES');
 }
 
+function setText(id, value) {
+  const element = $(id);
+  if (element) element.textContent = value;
+}
+
+function updateProjectBranding() {
+  document.title = 'CotizaAPI - Sistema web de cotizaciones con cálculo mediante API';
+
+  document.querySelectorAll('.logo-text h1').forEach((title) => {
+    title.innerHTML = 'Cotiza<span>API</span>';
+  });
+
+  setText('landingTagline', 'Sistema web de cotizaciones con cálculo mediante API');
+  setText('calculatorTagline', 'Sistema web de cotizaciones con cálculo mediante API');
+  setText('heroBadge', 'Cotizaciones con API simulada');
+  setText('heroTitle', 'CotizaAPI - Sistema web de cotizaciones con cálculo mediante API');
+  setText('heroDescription', 'CotizaAPI permite ingresar precio del producto o servicio, mano de obra e IVA para generar cotizaciones con subtotal, impuesto y total mediante una función API simulada.');
+  setText('whyTitle', '¿Por qué elegir CotizaAPI?');
+  setText('costPrecisionTitle', 'Cálculo mediante API');
+  setText('costPrecisionDesc', 'El subtotal, IVA y total se calculan pasando los datos por una función que simula una API de cotizaciones.');
+  setText('taxCalcTitle', 'IVA automatizado');
+  setText('taxCalcDesc', 'Aplica automáticamente la tasa del IVA del 15% sobre el subtotal del producto o servicio y la mano de obra.');
+  setText('internalDatabaseTitle', 'Historial local y Supabase');
+  setText('internalDatabaseDesc', 'Guarda las cotizaciones generadas y conserva un respaldo local para consulta rápida.');
+  setText('usageGuideTitle', 'Guía rápida de CotizaAPI');
+  setText('guideStep1Title', 'Accede al sistema');
+  setText('guideStep1Desc', 'Inicia sesión para entrar al panel de cotizaciones y trabajar con tu historial.');
+  setText('guideStep2Title', 'Ingresa los valores');
+  setText('guideStep2Desc', 'Escribe cliente, producto o servicio, precio y mano de obra.');
+  setText('guideStep3Title', 'Calcula con API');
+  setText('guideStep3Desc', 'El sistema muestra subtotal, IVA y total usando la función calcularCotizacionAPI.');
+  setText('featuresHeader', 'Automatiza cotizaciones con cálculo tipo API');
+  setText('feature1Title', 'Registro instantáneo');
+  setText('feature1Desc', 'Guarda cotizaciones y consulta el historial con un solo clic.');
+  setText('feature2Title', 'Desglose claro');
+  setText('feature2Desc', 'Visualiza subtotal, IVA y total de forma ordenada.');
+  setText('feature3Title', 'PDF de cotización');
+  setText('feature3Desc', 'Descarga cotizaciones con formato profesional para tus clientes.');
+  setText('feature4Title', 'Conexión API simulada');
+  setText('feature4Desc', 'La lógica está preparada para integrarse con una API externa real.');
+  setText('solutionsHeader', 'Cotizaciones listas para productos y servicios');
+  setText('solutionsDescription', 'CotizaAPI centraliza tus cotizaciones, evita cálculos manuales y prepara el proyecto para una integración API real.');
+  setText('solutionItem1', 'Ingreso de precio del producto o servicio.');
+  setText('solutionItem2', 'Ingreso de mano de obra y cálculo automático de IVA.');
+  setText('solutionItem3', 'Historial y descarga de PDF para cada cotización.');
+  setText('benefitsHeader', 'Qué ganas al usar CotizaAPI');
+  setText('benefit1Title', 'Más rapidez');
+  setText('benefit1Desc', 'Reduce el tiempo necesario para calcular y guardar una cotización.');
+  setText('benefit2Title', 'Menos errores');
+  setText('benefit2Desc', 'Los cálculos automáticos evitan fallos en impuestos, subtotales y totales.');
+  setText('benefit3Title', 'Mayor confianza');
+  setText('benefit3Desc', 'Presenta cotizaciones profesionales y consistentes a tus clientes.');
+  setText('benefit4Title', 'Preparado para API');
+  setText('benefit4Desc', 'La estructura puede conectarse luego a un servicio externo real de cotizaciones.');
+  setText('quoteFormTitle', 'Nueva Cotización API');
+  setText('deviceModelLabel', 'Producto / Servicio');
+  setText('deviceInputNote', 'Escribe el producto o servicio que deseas cotizar.');
+  setText('partsCostLabel', 'Precio producto/servicio ($)');
+  setText('btnCalculateText', 'Calcular por API y Guardar');
+  setText('livePreviewBadge', 'API simulada en vivo');
+  setText('breakdownTitle', 'Desglose de la Cotización');
+  setText('subtotalLabel', 'Subtotal (Precio + Mano de Obra)');
+  setText('chartTitle', 'Gráfico de la cotización');
+  setText('partsLabel', 'Producto/servicio');
+  setText('historyEmptyText', 'No hay cotizaciones registradas en el historial.');
+  setText('footerLine1', '© 2026 CotizaAPI. Sistema web de cotizaciones con cálculo mediante API.');
+  setText('footerLine2', 'Demostración funcional | Cotizaciones, IVA, historial y PDF');
+
+  document.querySelectorAll('.visual-header').forEach((element) => {
+    element.textContent = 'CotizaAPI';
+  });
+}
+
+function calcularCotizacionAPI(precio, manoObra, iva = IVA_RATE) {
+  // Esta funcion simula la respuesta de una API externa.
+  // En produccion se enviarian precio, manoObra, iva y API_KEY mediante fetch
+  // para autenticar y recibir los calculos desde un servicio real.
+  const apiKey = API_KEY;
+  const precioSeguro = Math.max(0, Number(precio) || 0);
+  const manoObraSegura = Math.max(0, Number(manoObra) || 0);
+  const ivaSeguro = Math.max(0, Number(iva) || 0);
+
+  console.log('Simulando conexion a API de cotizaciones con API_KEY:', apiKey);
+
+  const subtotal = +(precioSeguro + manoObraSegura).toFixed(2);
+  const valorIVA = +(subtotal * ivaSeguro).toFixed(2);
+  const total = +(subtotal + valorIVA).toFixed(2);
+
+  return { subtotal, valorIVA, total };
+}
+
 function calculateAmounts(parts, labor) {
-  const p = Math.max(0, Number(parts) || 0);
-  const l = Math.max(0, Number(labor) || 0);
-  const subtotal = +(p + l).toFixed(2);
-  const iva = +(subtotal * IVA_RATE).toFixed(2);
-  const total = +(subtotal + iva).toFixed(2);
-  return { subtotal, iva, total };
+  const { subtotal, valorIVA, total } = calcularCotizacionAPI(parts, labor, IVA_RATE);
+  return { subtotal, iva: valorIVA, total };
 }
 
 function navigateTo(sectionId) {
@@ -194,7 +285,7 @@ function handleSuccessfulLogin(email) {
   loadLocalMirror();
 
   if (inputEmail) inputEmail.value = email;
-  if (dbStatusLabel) dbStatusLabel.textContent = 'Supabase + Local';
+  if (dbStatusLabel) dbStatusLabel.textContent = 'API + Supabase';
   if (authForm) authForm.reset();
 
   navigateTo('calculatorSection');
@@ -272,11 +363,11 @@ function renderHistory(filter = '') {
     String(item.deviceModel || '').toLowerCase().includes(q)
   );
 
-  if (recordsBadge) recordsBadge.textContent = `${budgetList.length} registros`;
+  if (recordsBadge) recordsBadge.textContent = `${budgetList.length} Cotizaciones`;
   if (btnClearHistory) btnClearHistory.disabled = budgetList.length === 0;
 
   if (!items.length) {
-    bodyHistory.innerHTML = '<tr><td colspan="6">No hay presupuestos registrados.</td></tr>';
+    bodyHistory.innerHTML = '<tr><td colspan="6">No hay cotizaciones registradas.</td></tr>';
     return;
   }
 
@@ -348,7 +439,7 @@ async function handleBudgetFormSubmit(event) {
   const email = currentUser || inputEmail?.value || 'sin-correo@local.com';
 
   if (!clientName || !deviceModel) {
-    showToast('Completa cliente y dispositivo.', 'error');
+    showToast('Completa cliente y producto o servicio.', 'error');
     return;
   }
 
@@ -364,7 +455,7 @@ async function handleBudgetFormSubmit(event) {
     fecha_creacion: new Date().toISOString()
   };
 
-  showToast('Guardando cotización...', 'info');
+  showToast('Calculando por API y guardando cotización...', 'info');
   const result = await insertToSupabase(payload);
 
   const row = result.row || {};
@@ -388,7 +479,7 @@ async function handleBudgetFormSubmit(event) {
   if (inputEmail && currentUser) inputEmail.value = currentUser;
   updatePreviewDisplay();
 
-  showToast('Cotización guardada correctamente.', 'success');
+  showToast('Cotización API guardada correctamente.', 'success');
 }
 
 function drawPdfLogo(doc) {
@@ -402,11 +493,11 @@ function drawPdfLogo(doc) {
   doc.setTextColor(0, 198, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text('A', 22, 25, { align: 'center' });
+  doc.text('C', 22, 25, { align: 'center' });
 
   doc.setTextColor(130, 235, 255);
   doc.setFontSize(8);
-  doc.text('A', 22, 19.5, { align: 'center' });
+  doc.text('API', 22, 19.5, { align: 'center' });
 }
 
 function loadLogoForPDF() {
@@ -453,13 +544,14 @@ if (logoBase64) {
   doc.setTextColor(15, 23, 42);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
+  doc.text('CotizaAPI - Sistema web de cotizaciones con cálculo mediante API', 18, 48);
   doc.text('Datos del cliente', 18, 58);
   doc.setDrawColor(0, 198, 255);
   doc.line(18, 62, 86, 62);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.text(`Nombre: ${item.clientName}`, 18, 74);
-  doc.text(`Equipo / Producto: ${item.deviceModel}`, 18, 84);
+  doc.text(`Producto / Servicio: ${item.deviceModel}`, 18, 84);
   doc.text(`Usuario: ${item.email || currentUser || 'No registrado'}`, 18, 94);
 
   doc.setFillColor(241, 245, 249);
@@ -485,7 +577,7 @@ if (logoBase64) {
   doc.text('Precio', 183, startY + 8, { align: 'right' });
 
   const rows = [
-    ['Repuestos / productos', item.partsCost],
+    ['Producto / servicio', item.partsCost],
     ['Mano de obra', item.laborCost],
     ['Subtotal', item.subtotal],
     ['IVA 15%', item.iva]
@@ -518,18 +610,21 @@ if (logoBase64) {
   doc.setFontSize(9);
   doc.setDrawColor(226, 232, 240);
   doc.line(18, pageHeight - 32, 192, pageHeight - 32);
-  doc.text('Cotización generada automáticamente por AC Manager.', 18, pageHeight - 24);
-  doc.text('Gracias por confiar en nuestro servicio técnico.', 18, pageHeight - 17);
+  doc.text('Cotización generada automáticamente por CotizaAPI mediante cálculo API simulado.', 18, pageHeight - 24);
+  doc.text('Gracias por confiar en nuestro sistema de cotizaciones.', 18, pageHeight - 17);
 
   doc.save(`cotizacion-${item.id}.pdf`);
 }
 
 function init() {
+  updateProjectBranding();
   loadLocalMirror();
   updateLanguageDisplay();
+  updateProjectBranding();
   setAuthMode('login');
 
   if (currentUser && inputEmail) inputEmail.value = currentUser;
+  if (dbStatusLabel) dbStatusLabel.textContent = 'API + Local';
   navigateTo('landingSection');
 
   btnEnterApp?.addEventListener('click', (event) => {
@@ -596,7 +691,7 @@ function init() {
 
   renderHistory();
   updatePreviewDisplay();
-  console.log('AC Manager iniciado correctamente.');
+  console.log('CotizaAPI iniciado correctamente.');
 }
 
 if (document.readyState === 'loading') {
