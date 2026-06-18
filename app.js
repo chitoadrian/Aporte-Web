@@ -16,7 +16,7 @@ const LEGACY_STORAGE_USERS_KEY = ['ac', 'manager', 'users'].join('_');
 const LEGACY_STORAGE_SESSION_KEY = ['ac', 'manager', 'session'].join('_');
 const IVA_RATE = 0.15;
 const REST_COUNTRIES_API_KEY = 'rc_live_demo';
-const WEATHER_API_KEY = "PEGA_AQUI_TU_API_KEY_REAL";
+const WEATHER_API_KEY = "553f27cd6cdb30488d63f4a79a263efe";
 const EXCHANGE_RATE_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
 const COUNTRY_CATALOG = [
